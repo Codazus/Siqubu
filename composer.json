@@ -1,6 +1,7 @@
 {
     "name": "codazus/yaqb",
     "description": "Yet Another Query Builder",
+    "version": "0.0.1-dev",
     "type": "library",
     "license": "MIT",
     "authors": [
@@ -9,5 +10,19 @@
             "email": "djlechuck@gmail.com"
         }
     ],
-    "require": {}
+    "support": {
+        "email": "contact@djlechuck.fr",
+        "issues": "https://github.com/Codazus/YAQB/issues",
+        "source": "https://github.com/Codazus/YAQB",
+        "docs": "https://github.com/Codazus/YAQB/wiki"
+    },
+    "require": {},
+    "require-dev": {
+        "phpunit/phpunit": "^5.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "YAQB\\": "src/"
+        }
+    }
 }
