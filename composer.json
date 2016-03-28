@@ -1,0 +1,13 @@
+{
+    "name": "codazus/yaqb",
+    "description": "Yet Another Query Builder",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "DjLeChuck",
+            "email": "djlechuck@gmail.com"
+        }
+    ],
+    "require": {}
+}
