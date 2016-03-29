@@ -488,6 +488,10 @@ abstract class AbstractBuilder
      */
     protected function renderWhere()
     {
+        if (empty($this->where)) {
+            return '';
+        }
+
         $where = [];
 
         foreach ($this->where as $data) {
@@ -525,7 +529,7 @@ abstract class AbstractBuilder
             $where[] = sprintf('%s %s %s', $left, $data['operator'], $right);
         }
 
-        return trim(implode(' AND ', $where));
+        return trim(sprintf('WHERE %s ', implode(' AND ', $where)));
     }
 
     /**
