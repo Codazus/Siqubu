@@ -78,6 +78,13 @@ abstract class AbstractBuilder
     protected $where = [];
 
     /**
+     * GROUP BY parts.
+     *
+     * @var array
+     */
+    protected $group_by = [];
+
+    /**
      * An instance of DB.
      *
      * @var mixed
@@ -316,6 +323,30 @@ abstract class AbstractBuilder
     }
 
     /**
+     * Add a GROUP BY clause.
+     *
+     * @param mixed $data The GROUP BY data
+     *
+     * @return AbstractBuilder
+     */
+    public function groupBy($data)
+    {
+        if (!is_array($data)) {
+            $data = [$data];
+        }
+
+        foreach ($data as $key => $value) {
+            if (!is_numeric($key)) {
+                $value = [$key => $value];
+            }
+
+            $this->group_by[] = $value;
+        }
+
+        return $this;
+    }
+
+    /**
      * Renders the whole query.
      *
      * @return string
@@ -487,6 +518,40 @@ abstract class AbstractBuilder
         }
 
         return trim(implode(' AND ', $where));
+    }
+
+    /**
+     * Renders the GROUP BY parts.
+     *
+     * @return string
+     */
+    protected function renderGroupBy()
+    {
+        if (empty($this->group_by)) {
+            return '';
+        }
+
+        $group_by = [];
+
+        foreach ($this->group_by as $group_data) {
+            list($alias, $value) = $this->getAliasData($group_data);
+
+            if ($value instanceof Literal) {
+                $value = $value->render();
+            } elseif ($value instanceof Select) {
+                $value = sprintf('(%s)', $value->render());
+            } else {
+                $value = self::quote($value);
+            }
+
+            if (null !== $alias) {
+                $value = sprintf('%s.%s', self::quote($alias), $value);
+            }
+
+            $group_by[] = $value;
+        }
+
+        return trim(sprintf('GROUP BY %s', implode(', ', $group_by)));
     }
 
     /**
