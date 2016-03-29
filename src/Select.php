@@ -25,6 +25,7 @@ class Select extends AbstractBuilder
      * @param string|array $columns Columns to select.<br />
      * - If a string is passed, the value will be quoted,
      * - if a \YAQB\Literal is passed, he will be rendered,
+     * - if a \YAQB\Select is passed, he will be rendered,
      * - if an array is passed the key will be the table name and his value
      * the field.
      *
@@ -49,7 +50,8 @@ class Select extends AbstractBuilder
     public function render()
     {
         $query = $this->renderSelect().' '.
-            $this->renderFrom().' '
+            $this->renderFrom().' '.
+            $this->renderJoin().' '
         ;
 
         return trim($query);
@@ -69,22 +71,30 @@ class Select extends AbstractBuilder
         }
 
         foreach ($this->columns as $alias => $field) {
+            list($field_alias, $field_value) = $this->getAliasData($field);
+
             // If Literal, render as is...
-            if ($field instanceof Literal) {
-                $field = $field->render();
-            // ... if associative array, key = table and value = field
-            } elseif (is_array($field)) {
-                $field = $this->quote(key($field)).'.'.$this->quote(current($field));
-            // ... else only field
+            if ($field_value instanceof Literal) {
+                $field_value = $field_value->render();
+            // ... if Select, render as is...
+            } elseif ($field_value instanceof Select) {
+                $field_value = sprintf('(%s)', $field_value->render());
+            // ... else quote value.
             } else {
-                $field = $this->quote($field);
+                $field_value = self::quote($field_value);
+            }
+
+            if (null !== $field_alias) {
+                $field = self::quote($field_alias).'.'.$field_value;
+            } else {
+                $field = $field_value;
             }
 
             if (!is_numeric($alias)) {
-                $fields[] = $field.' '.$this->quote($alias);
-            } else {
-                $fields[] = $field;
+                $field = $field.' '.self::quote($alias);
             }
+
+            $fields[] = $field;
         }
 
         return trim(sprintf('SELECT %s', implode(', ', $fields)));
