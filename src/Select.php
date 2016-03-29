@@ -51,8 +51,8 @@ class Select extends AbstractBuilder
     {
         $query = $this->renderSelect().' '.
             $this->renderFrom().' '.
-            $this->renderJoin().' '
-        ;
+            $this->renderJoin().' '.
+            $this->renderWhere();
 
         return trim($query);
     }

@@ -15,9 +15,9 @@ abstract class AbstractBuilder
     const WILDCARD = '*';
 
     /**
-     * QUOTE IDENTIFIER
+     * DEFAULT ESCAPE IDENTIFIER
      */
-    const QUOTE_IDENTIFIER = '`';
+    const DEFAULT_ESCAPE_IDENTIFIER = "'";
 
     /**
      * @var string
@@ -68,7 +68,28 @@ abstract class AbstractBuilder
      *
      * @var array
      */
-    protected $joins = [];
+    protected $join = [];
+
+    /**
+     * WHERE parts.
+     *
+     * @var array
+     */
+    protected $where = [];
+
+    /**
+     * An instance of DB.
+     *
+     * @var mixed
+     */
+    protected static $db;
+
+    /**
+     * The quote identifier.
+     *
+     * @var string
+     */
+    protected static $quote_identifier = '`';
 
     /**
      * Set the from part. Can be an instance of \YABQ\Builder\Select or a
@@ -183,6 +204,118 @@ abstract class AbstractBuilder
     }
 
     /**
+     * Add a WHERE clause.<br />
+     * Default will be A = B.
+     *
+     * @param mixed $left The left operand
+     * @param mixed $right The right operand
+     * @param string $operator The clause operator
+     *
+     * @return AbstractBuilder
+     */
+    public function where($left, $right, $operator = '=')
+    {
+        $this->where[] = [
+            'left'      => $left,
+            'right'     => $right,
+            'operator'  => $operator,
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Add a WHERE clause with A != B.
+     *
+     * @param mixed $left The left operand
+     * @param mixed $right The right operand
+     *
+     * @return AbstractBuilder
+     */
+    public function whereNot($left, $right)
+    {
+        return $this->where($left, $right, '!=');
+    }
+
+    /**
+     * Add a WHERE clause with A LIKE B.
+     *
+     * @param mixed $left The left operand
+     * @param mixed $right The right operand
+     *
+     * @return AbstractBuilder
+     */
+    public function whereLike($left, $right)
+    {
+        return $this->where($left, $right, 'LIKE');
+    }
+
+    /**
+     * Add a WHERE clause with A NOT LIKE B.
+     *
+     * @param mixed $left The left operand
+     * @param mixed $right The right operand
+     *
+     * @return AbstractBuilder
+     */
+    public function whereNotLike($left, $right)
+    {
+        return $this->where($left, $right, 'NOT LIKE');
+    }
+
+    /**
+     * Add a WHERE clause with A > B.
+     *
+     * @param mixed $left The left operand
+     * @param mixed $right The right operand
+     *
+     * @return AbstractBuilder
+     */
+    public function whereGt($left, $right)
+    {
+        return $this->where($left, $right, '>');
+    }
+
+    /**
+     * Add a WHERE clause with A >= B.
+     *
+     * @param mixed $left The left operand
+     * @param mixed $right The right operand
+     *
+     * @return AbstractBuilder
+     */
+    public function whereGte($left, $right)
+    {
+        return $this->where($left, $right, '>=');
+    }
+
+    /**
+     * Add a WHERE clause with A < B.
+     *
+     * @param mixed $left The left operand
+     * @param mixed $right The right operand
+     *
+     * @return AbstractBuilder
+     */
+    public function whereLt($left, $right)
+    {
+        return $this->where($left, $right, '<');
+    }
+
+    /**
+     * Add a WHERE clause with A <= B.
+     *
+     * @param mixed $left The left operand
+     * @param mixed $right The right operand
+     *
+     * @return AbstractBuilder
+     */
+    public function whereLte($left, $right)
+    {
+        return $this->where($left, $right, '<=');
+    }
+
+    /**
      * Renders the whole query.
      *
      * @return string
@@ -222,7 +355,7 @@ abstract class AbstractBuilder
             }
         }
 
-        $this->joins[] = [
+        $this->join[] = [
             'type'          => $type,
             'data'          => $data,
             'conditions'    => $conditions,
@@ -254,11 +387,11 @@ abstract class AbstractBuilder
      *
      * @return string
      */
-    public function renderJoin()
+    protected function renderJoin()
     {
         $str = [];
 
-        foreach ($this->joins as $join_data) {
+        foreach ($this->join as $join_data) {
             list($alias, $table) = $this->getAliasData($join_data['data']);
 
             if ($table instanceof Select) {
@@ -296,10 +429,64 @@ abstract class AbstractBuilder
                 $conditions[] = sprintf('%s = %s', $from, $to);
             }
 
-            $str[] = sprintf('%s %s %s ON %s', $join_data['type'], $table, self::quote($alias), trim(implode(' AND ', $conditions)));
+            $condition_str = sprintf('%s %s %s', $join_data['type'], $table, self::quote($alias));
+
+            if (!empty($conditions)) {
+                $condition_str .= sprintf(' ON %s', trim(implode(' AND ', $conditions)));
+            }
+
+
+            $str[] = $condition_str;
         }
 
         return trim(implode(' ', $str));
+    }
+
+    /**
+     * Renders the JOIN parts.
+     *
+     * @return string
+     */
+    protected function renderWhere()
+    {
+        $where = [];
+
+        foreach ($this->where as $data) {
+            list($left_alias, $left_operand)    = $this->getAliasData($data['left']);
+            list($right_alias, $right_operand)  = $this->getAliasData($data['right']);
+
+            if ($left_operand instanceof Literal) {
+                $left_operand = $left_operand->render();
+            } elseif ($left_operand instanceof Select) {
+                $left_operand = sprintf('(%s)', $left_operand->render());
+            } else {
+                $left_operand = self::quote($left_operand);
+            }
+
+            if (null !== $left_alias) {
+                $left = sprintf('%s.%s', self::quote($left_alias), $left_operand);
+            } else {
+                $left = $left_operand;
+            }
+
+            if ($right_operand instanceof Literal) {
+                $right_operand = $right_operand->render();
+            } elseif ($right_operand instanceof Select) {
+                $right_operand = sprintf('(%s)', $right_operand->render());
+            } else {
+                $right_operand = self::escape($right_operand);
+            }
+
+            if (null !== $right_alias) {
+                $right = sprintf('%s.%s', self::quote($right_alias), $right_operand);
+            } else {
+                $right = $right_operand;
+            }
+
+            $where[] = sprintf('%s %s %s', $left, $data['operator'], $right);
+        }
+
+        return trim(implode(' AND ', $where));
     }
 
     /**
@@ -333,10 +520,66 @@ abstract class AbstractBuilder
      */
     public static function quote($value)
     {
-        if (self::WILDCARD === $value) {
+        if (empty($value)) {
+            return null;
+        }
+
+        if (static::WILDCARD === $value) {
             return $value;
         }
 
-        return self::QUOTE_IDENTIFIER.$value.self::QUOTE_IDENTIFIER;
+        return static::$quote_identifier.$value.static::$quote_identifier;
+    }
+
+    /**
+     * Escapes the value. Uses the DB capability if provided.
+     *
+     * @param string $value Value to quote
+     *
+     * @return string
+     */
+    public static function escape($value)
+    {
+        if (static::$db instanceof \PDO) {
+            return static::$db->quote($value);
+        } elseif (static::$db instanceof \mysqli) {
+            return sprintf('\'%s\'', static::$db->real_escape_string($value));
+        }
+
+        if (null === $value) {
+            return 'NULL';
+        } elseif (is_bool($value)) {
+            return (int) $value;
+        } elseif ($value instanceof Literal) {
+            return $value->render();
+        } elseif ($value instanceof Select) {
+            return sprintf('(%s)', $value);
+        }
+
+        return static::DEFAULT_ESCAPE_IDENTIFIER.str_replace(static::DEFAULT_ESCAPE_IDENTIFIER, sprintf('\\%s', static::DEFAULT_ESCAPE_IDENTIFIER), $value).static::DEFAULT_ESCAPE_IDENTIFIER;
+    }
+
+    /**
+     * Set the quote identifier used by the builder.
+     *
+     * @param string $identifier Identifier to use
+     */
+    public static function setQuoteIdentifier($identifier)
+    {
+        static::$quote_identifier = $identifier;
+    }
+
+    /**
+     * Set the instance of the DB used by the builder to escape values.
+     *
+     * @param string $db Identifier to use
+     */
+    public static function setDb($db)
+    {
+        if (!($db instanceof \PDO || $db instanceof \mysqli)) {
+            throw new InvalidArgumentException('The DB must be an instance of \PDO or \mysqli.');
+        }
+
+        static::$db = $db;
     }
 }
