@@ -351,7 +351,15 @@ abstract class AbstractBuilder
      *
      * @return string
      */
-    abstract public function render();
+    protected function render()
+    {
+        return trim(
+            $this->renderFrom().' '.
+            $this->renderJoin().' '.
+            $this->renderWhere().' '.
+            $this->renderGroupBy()
+        );
+    }
 
     /**
      * @return string

@@ -49,13 +49,7 @@ class Select extends AbstractBuilder
      */
     public function render()
     {
-        $query = $this->renderSelect().' '.
-            $this->renderFrom().' '.
-            $this->renderJoin().' '.
-            $this->renderWhere().' '.
-            $this->renderGroupBy();
-
-        return trim($query);
+        return trim($this->renderSelect().' '.parent::render());
     }
 
     /**
