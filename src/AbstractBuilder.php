@@ -85,6 +85,13 @@ abstract class AbstractBuilder
     protected $group_by = [];
 
     /**
+     * ORDER BY parts.
+     *
+     * @var array
+     */
+    protected $order_by = [];
+
+    /**
      * An instance of DB.
      *
      * @var mixed
@@ -347,6 +354,30 @@ abstract class AbstractBuilder
     }
 
     /**
+     * Add an ORDER BY clause.
+     *
+     * @param mixed $data The ORDER BY data
+     *
+     * @return AbstractBuilder
+     */
+    public function orderBy($data)
+    {
+        if (!is_array($data)) {
+            $data = [$data];
+        }
+
+        foreach ($data as $key => $value) {
+            if (!is_numeric($key)) {
+                $value = [$key => $value];
+            }
+
+            $this->order_by[] = $value;
+        }
+
+        return $this;
+    }
+
+    /**
      * Renders the whole query.
      *
      * @return string
@@ -357,7 +388,8 @@ abstract class AbstractBuilder
             $this->renderFrom().' '.
             $this->renderJoin().' '.
             $this->renderWhere().' '.
-            $this->renderGroupBy()
+            $this->renderGroupBy().' '.
+            $this->renderOrderBy()
         );
     }
 
@@ -564,6 +596,40 @@ abstract class AbstractBuilder
         }
 
         return trim(sprintf('GROUP BY %s', implode(', ', $group_by)));
+    }
+
+    /**
+     * Renders the ORDER BY parts.
+     *
+     * @return string
+     */
+    protected function renderOrderBy()
+    {
+        if (empty($this->order_by)) {
+            return '';
+        }
+
+        $order_by = [];
+
+        foreach ($this->order_by as $order_data) {
+            list($alias, $value) = $this->getAliasData($order_data);
+
+            if ($value instanceof Literal) {
+                $value = $value->render();
+            } elseif ($value instanceof Select) {
+                $value = sprintf('(%s)', $value->render());
+            } else {
+                $value = self::quote($value);
+            }
+
+            if (null !== $alias) {
+                $value = sprintf('%s.%s', self::quote($alias), $value);
+            }
+
+            $order_by[] = $value;
+        }
+
+        return trim(sprintf('ORDER BY %s', implode(', ', $order_by)));
     }
 
     /**
