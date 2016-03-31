@@ -9,7 +9,7 @@ php:
 
 before_script: composer install
 
-script: phpunit
+script: phpunit --bootstrap vendor/autoload.php tests
 
 notifications:
   email: false
