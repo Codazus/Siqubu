@@ -9,7 +9,9 @@ php:
 
 before_script: composer install
 
-script: phpunit --bootstrap vendor/autoload.php --color tests
+script:
+  - phpunit --bootstrap vendor/autoload.php --color tests
+  - vendor/bin/phpspec run
 
 notifications:
   email: false
