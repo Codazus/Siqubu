@@ -489,14 +489,14 @@ abstract class AbstractBuilder
      */
     protected function render()
     {
-        return trim(
-            $this->renderFrom().' '.
-            $this->renderJoin().' '.
-            $this->renderWhere().' '.
-            $this->renderGroupBy().' '.
-            $this->renderOrderBy().' '.
-            $this->renderLimit()
-        );
+        return implode(' ', array_filter([
+            $this->renderFrom(),
+            $this->renderJoin(),
+            $this->renderWhere(),
+            $this->renderGroupBy(),
+            $this->renderOrderBy(),
+            $this->renderLimit(),
+        ]));
     }
 
     /**
