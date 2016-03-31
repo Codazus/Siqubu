@@ -10,4 +10,4 @@ php:
 notifications:
   email: false
 
-script: phpunit tests
+script: phpunit --bootstrap vendor/autoload.php tests
