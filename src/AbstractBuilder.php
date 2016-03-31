@@ -10,6 +10,7 @@ use YAQB\Expressions\CloseBracket;
 use YAQB\Expressions\ExpressionsInterface;
 use YAQB\Expressions\Literal;
 use YAQB\Expressions\OpenBracket;
+use YAQB\Expressions\OrOperator;
 
 /**
  * Abstract builder used by Select, Update, Insert and Delete.
@@ -452,6 +453,18 @@ abstract class AbstractBuilder
     }
 
     /**
+     * Add an OR operator.
+     *
+     * @return AbstractBuilder
+     */
+    public function orOperator()
+    {
+        $this->where->push(new OrOperator());
+
+        return $this;
+    }
+
+    /**
      * @return string
      */
     public function __toString()
@@ -605,7 +618,8 @@ abstract class AbstractBuilder
             if ($data instanceof ExpressionsInterface) {
                 $where .= $data->render().' ';
 
-                if (!$data instanceof OpenBracket &&
+                if (!$data instanceof OrOperator &&
+                    !$data instanceof OpenBracket &&
                     $this->where->offsetExists($index + 1) &&
                     !$this->where->offsetGet($index + 1) instanceof CloseBracket) {
                     $where .= 'AND ';
@@ -652,7 +666,8 @@ abstract class AbstractBuilder
 
             // If the next WHERE part is not a closing bracket, we add an AND
             if ($this->where->offsetExists($index + 1) &&
-                !$this->where->offsetGet($index + 1) instanceof CloseBracket) {
+                !$this->where->offsetGet($index + 1) instanceof CloseBracket &&
+                !$this->where->offsetGet($index + 1) instanceof OrOperator) {
                 $where .= 'AND ';
             }
         }
