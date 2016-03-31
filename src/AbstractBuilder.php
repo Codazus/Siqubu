@@ -555,7 +555,7 @@ abstract class AbstractBuilder
             $table = self::quote($table);
         }
 
-        return trim(sprintf('FROM %s %s', $table, $alias));
+        return trim(sprintf('FROM %s %s', $table, self::quote($alias)));
     }
 
     /**
