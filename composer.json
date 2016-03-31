@@ -21,6 +21,7 @@
         "php": ">=5.4.0"
     },
     "require-dev": {
+        "symfony/yaml": "~2.8",
         "phpunit/phpunit": "~4.8"
     },
     "autoload": {
