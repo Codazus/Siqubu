@@ -582,7 +582,7 @@ abstract class AbstractBuilder
 
             $str .= sprintf('%s %s %s', $join_data['type'], $table, self::quote($alias));
 
-            if (empty($join_data['conditions'])) {
+            if (0 === $join_data['conditions']->count()) {
                 continue;
             }
 
