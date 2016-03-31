@@ -14,6 +14,6 @@ class OrOperator implements ExpressionsInterface
      */
     public function render()
     {
-        return ' OR ';
+        return 'OR';
     }
 }

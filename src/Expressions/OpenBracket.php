@@ -14,6 +14,6 @@ class OpenBracket implements ExpressionsInterface
      */
     public function render()
     {
-        return ' (';
+        return '(';
     }
 }

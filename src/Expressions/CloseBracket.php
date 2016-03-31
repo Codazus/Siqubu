@@ -14,6 +14,6 @@ class CloseBracket implements ExpressionsInterface
      */
     public function render()
     {
-        return ') ';
+        return ')';
     }
 }
