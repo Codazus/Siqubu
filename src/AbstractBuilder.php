@@ -3,6 +3,13 @@
 namespace YAQB;
 
 use InvalidArgumentException;
+use mysqli;
+use PDO;
+use SplQueue;
+use YAQB\Expressions\CloseBracket;
+use YAQB\Expressions\ExpressionsInterface;
+use YAQB\Expressions\Literal;
+use YAQB\Expressions\OpenBracket;
 
 /**
  * Abstract builder used by Select, Update, Insert and Delete.
@@ -73,9 +80,9 @@ abstract class AbstractBuilder
     /**
      * WHERE parts.
      *
-     * @var array
+     * @var SplQueue
      */
-    protected $where = [];
+    protected $where;
 
     /**
      * GROUP BY parts.
@@ -111,6 +118,14 @@ abstract class AbstractBuilder
      * @var string
      */
     protected static $quote_identifier = '`';
+
+    /**
+     * Constructor.
+     */
+    public function __construct()
+    {
+        $this->where = new SplQueue();
+    }
 
     /**
      * Set the from part. Can be an instance of \YABQ\Builder\Select or a
@@ -236,11 +251,11 @@ abstract class AbstractBuilder
      */
     public function where($left, $right, $operator = '=')
     {
-        $this->where[] = [
+        $this->where->push([
             'left'      => $left,
             'right'     => $right,
             'operator'  => $operator,
-        ];
+        ]);
 
         return $this;
     }
@@ -413,6 +428,38 @@ abstract class AbstractBuilder
     }
 
     /**
+     * Open a bracket.
+     *
+     * @return AbstractBuilder
+     */
+    public function openBracket()
+    {
+        $this->where->push(new OpenBracket());
+
+        return $this;
+    }
+
+    /**
+     * Close a bracket.
+     *
+     * @return AbstractBuilder
+     */
+    public function closeBracket()
+    {
+        $this->where->push(new CloseBracket());
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function __toString()
+    {
+        return $this->render();
+    }
+
+    /**
      * Renders the whole query.
      *
      * @return string
@@ -427,14 +474,6 @@ abstract class AbstractBuilder
             $this->renderOrderBy().' '.
             $this->renderLimit()
         );
-    }
-
-    /**
-     * @return string
-     */
-    public function __toString()
-    {
-        return $this->render();
     }
 
     /**
@@ -550,22 +589,36 @@ abstract class AbstractBuilder
     }
 
     /**
-     * Renders the JOIN parts.
+     * Renders the WHERE parts.
      *
      * @return string
      */
     protected function renderWhere()
     {
-        if (empty($this->where)) {
+        if (0 === $this->where->count()) {
             return '';
         }
 
-        $where = [];
+        $where = 'WHERE ';
 
-        foreach ($this->where as $data) {
+        foreach ($this->where as $index => $data) {
+            if ($data instanceof ExpressionsInterface) {
+                $where .= $data->render().' ';
+
+                if (!$data instanceof OpenBracket &&
+                    $this->where->offsetExists($index + 1) &&
+                    !$this->where->offsetGet($index + 1) instanceof CloseBracket) {
+                    $where .= 'AND ';
+                }
+
+                continue;
+            }
+
+            // Get alias and values data
             list($left_alias, $left_operand)    = $this->getAliasData($data['left']);
             list($right_alias, $right_operand)  = $this->getAliasData($data['right']);
 
+            // Treats the left operand
             if ($left_operand instanceof Literal) {
                 $left_operand = $left_operand->render();
             } elseif ($left_operand instanceof Select) {
@@ -580,6 +633,7 @@ abstract class AbstractBuilder
                 $left = $left_operand;
             }
 
+            // Treats the right operand
             if ($right_operand instanceof Literal) {
                 $right_operand = $right_operand->render();
             } elseif ($right_operand instanceof Select) {
@@ -594,10 +648,16 @@ abstract class AbstractBuilder
                 $right = $right_operand;
             }
 
-            $where[] = sprintf('%s %s %s', $left, $data['operator'], $right);
+            $where .= sprintf('%s %s %s ', $left, $data['operator'], $right);
+
+            // If the next WHERE part is not a closing bracket, we add an AND
+            if ($this->where->offsetExists($index + 1) &&
+                !$this->where->offsetGet($index + 1) instanceof CloseBracket) {
+                $where .= 'AND ';
+            }
         }
 
-        return trim(sprintf('WHERE %s ', implode(' AND ', $where)));
+        return trim($where);
     }
 
     /**
@@ -740,9 +800,9 @@ abstract class AbstractBuilder
      */
     public static function escape($value)
     {
-        if (static::$db instanceof \PDO) {
+        if (static::$db instanceof PDO) {
             return static::$db->quote($value);
-        } elseif (static::$db instanceof \mysqli) {
+        } elseif (static::$db instanceof mysqli) {
             return sprintf('\'%s\'', static::$db->real_escape_string($value));
         }
 
@@ -776,7 +836,7 @@ abstract class AbstractBuilder
      */
     public static function setDb($db)
     {
-        if (!($db instanceof \PDO || $db instanceof \mysqli)) {
+        if (!($db instanceof PDO || $db instanceof mysqli)) {
             throw new InvalidArgumentException('The DB must be an instance of \PDO or \mysqli.');
         }
 

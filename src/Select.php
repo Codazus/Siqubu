@@ -2,6 +2,8 @@
 
 namespace YAQB;
 
+use YAQB\Expressions\Literal;
+
 /**
  * Select builder.
  */
@@ -14,6 +16,8 @@ class Select extends AbstractBuilder
      */
     public function __construct($columns = null)
     {
+        parent::__construct();
+
         if (null !== $columns) {
             $this->select($columns);
         }

@@ -1,11 +1,11 @@
 <?php
 
-namespace YAQB;
+namespace YAQB\Expressions;
 
 /**
  * Literal not escape
  */
-class Literal
+class Literal implements ExpressionsInterface
 {
     /**
      * Literal
