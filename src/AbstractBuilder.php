@@ -74,9 +74,9 @@ abstract class AbstractBuilder
     /**
      * JOIN parts.
      *
-     * @var array
+     * @var SplQueue
      */
-    protected $join = [];
+    protected $join;
 
     /**
      * WHERE parts.
@@ -107,6 +107,13 @@ abstract class AbstractBuilder
     protected $limit = [];
 
     /**
+     * The current SplQueue where to push ExpressionsInterface.
+     *
+     * @var SplQueue
+     */
+    protected $current_expression_queue;
+
+    /**
      * An instance of DB.
      *
      * @var mixed
@@ -125,7 +132,8 @@ abstract class AbstractBuilder
      */
     public function __construct()
     {
-        $this->where = new SplQueue();
+        $this->where    = new SplQueue();
+        $this->join     = new SplQueue();
     }
 
     /**
@@ -257,6 +265,8 @@ abstract class AbstractBuilder
             'right'     => $right,
             'operator'  => $operator,
         ]);
+
+        $this->current_expression_queue = $this->where;
 
         return $this;
     }
@@ -435,7 +445,7 @@ abstract class AbstractBuilder
      */
     public function openBracket()
     {
-        $this->where->push(new OpenBracket());
+        $this->current_expression_queue->push(new OpenBracket());
 
         return $this;
     }
@@ -447,7 +457,7 @@ abstract class AbstractBuilder
      */
     public function closeBracket()
     {
-        $this->where->push(new CloseBracket());
+        $this->current_expression_queue->push(new CloseBracket());
 
         return $this;
     }
@@ -459,7 +469,7 @@ abstract class AbstractBuilder
      */
     public function orOperator()
     {
-        $this->where->push(new OrOperator());
+        $this->current_expression_queue->push(new OrOperator());
 
         return $this;
     }
@@ -508,17 +518,24 @@ abstract class AbstractBuilder
         }
 
         // Checks data conditions
+        $queue_conditions = new \SplQueue();
+
         foreach ($conditions as $conditon_data) {
-            if (!is_array($conditon_data) || 2 !== count($conditon_data)) {
-                throw new InvalidArgumentException('Each JOIN conditions should be an array of two elements.');
+            if (!$conditon_data instanceof ExpressionsInterface &&
+                (!is_array($conditon_data) || 2 !== count($conditon_data))) {
+                throw new InvalidArgumentException('Each JOIN conditions should be an ExpressionsInterface or an array of two elements.');
             }
+
+            $queue_conditions->push($conditon_data);
         }
 
-        $this->join[] = [
+        $this->join->push([
             'type'          => $type,
             'data'          => $data,
-            'conditions'    => $conditions,
-        ];
+            'conditions'    => $queue_conditions,
+        ]);
+
+        $this->current_expression_queue = $this->join;
 
         return $this;
     }
@@ -548,7 +565,11 @@ abstract class AbstractBuilder
      */
     protected function renderJoin()
     {
-        $str = [];
+        if (0 === $this->join->count()) {
+            return '';
+        }
+
+        $str = '';
 
         foreach ($this->join as $join_data) {
             list($alias, $table) = $this->getAliasData($join_data['data']);
@@ -559,11 +580,30 @@ abstract class AbstractBuilder
                 $table = self::quote($table);
             }
 
-            $conditions = [];
+            $str .= sprintf('%s %s %s', $join_data['type'], $table, self::quote($alias));
 
-            foreach ($join_data['conditions'] as $conditions_data) {
-                list($from_alias, $from_table)  = $this->getAliasData($conditions_data[0]);
-                list($to_alias, $to_table)      = $this->getAliasData($conditions_data[1]);
+            if (empty($join_data['conditions'])) {
+                continue;
+            }
+
+            $str .= ' ON ';
+
+            foreach ($join_data['conditions'] as $index => $data) {
+                if ($data instanceof ExpressionsInterface) {
+                    $str .= $data->render().' ';
+
+                    if (!$data instanceof OrOperator &&
+                        !$data instanceof OpenBracket &&
+                        $join_data['conditions']->offsetExists($index + 1) &&
+                        !$join_data['conditions']->offsetGet($index + 1) instanceof CloseBracket) {
+                        $str .= 'AND ';
+                    }
+
+                    continue;
+                }
+
+                list($from_alias, $from_table)  = $this->getAliasData($data[0]);
+                list($to_alias, $to_table)      = $this->getAliasData($data[1]);
 
                 if (null !== $from_alias) {
                     $from = sprintf('%s.%s', self::quote($from_alias), self::quote($from_table));
@@ -585,20 +625,21 @@ abstract class AbstractBuilder
                     $to = $to_table;
                 }
 
-                $conditions[] = sprintf('%s = %s', $from, $to);
+                $str .= sprintf('%s = %s ', $from, $to);
+
+                /*
+                 * If we have another condition part next and it is not a
+                 * closing bracket or an OrOperator, we add an AND
+                 */
+                if ($join_data['conditions']->offsetExists($index + 1) &&
+                    !$join_data['conditions']->offsetGet($index + 1) instanceof CloseBracket &&
+                    !$join_data['conditions']->offsetGet($index + 1) instanceof OrOperator) {
+                    $str .= 'AND ';
+                }
             }
-
-            $condition_str = sprintf('%s %s %s', $join_data['type'], $table, self::quote($alias));
-
-            if (!empty($conditions)) {
-                $condition_str .= sprintf(' ON %s', trim(implode(' AND ', $conditions)));
-            }
-
-
-            $str[] = $condition_str;
         }
 
-        return trim(implode(' ', $str));
+        return trim($str);
     }
 
     /**
@@ -664,7 +705,10 @@ abstract class AbstractBuilder
 
             $where .= sprintf('%s %s %s ', $left, $data['operator'], $right);
 
-            // If the next WHERE part is not a closing bracket, we add an AND
+            /*
+             * If we have another WHERE part next and it is not a closing
+             * bracket or an OrOperator, we add an AND
+             */
             if ($this->where->offsetExists($index + 1) &&
                 !$this->where->offsetGet($index + 1) instanceof CloseBracket &&
                 !$this->where->offsetGet($index + 1) instanceof OrOperator) {
