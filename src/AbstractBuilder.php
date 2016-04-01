@@ -92,6 +92,13 @@ abstract class AbstractBuilder
      */
     protected $group_by = [];
 
+     /**
+     * HAVING parts.
+     *
+     * @var SplQueue
+     */
+    protected $having;
+
     /**
      * ORDER BY parts.
      *
@@ -132,8 +139,9 @@ abstract class AbstractBuilder
      */
     public function __construct()
     {
-        $this->where    = new SplQueue();
         $this->join     = new SplQueue();
+        $this->where    = new SplQueue();
+        $this->having   = new SplQueue();
     }
 
     /**
@@ -387,6 +395,120 @@ abstract class AbstractBuilder
     }
 
     /**
+     * Add a HAVING clause.<br />
+     * Default will be A = B.
+     *
+     * @param mixed $left The left operand
+     * @param mixed $right The right operand
+     * @param string $operator The clause operator
+     *
+     * @return AbstractBuilder
+     */
+    public function having($left, $right, $operator = '=')
+    {
+        $this->having->push([
+            'left'      => $left,
+            'right'     => $right,
+            'operator'  => $operator,
+        ]);
+
+        $this->current_expression_queue = $this->having;
+
+        return $this;
+    }
+
+    /**
+     * Add a HAVING clause with A != B.
+     *
+     * @param mixed $left The left operand
+     * @param mixed $right The right operand
+     *
+     * @return AbstractBuilder
+     */
+    public function havingNot($left, $right)
+    {
+        return $this->having($left, $right, '!=');
+    }
+
+    /**
+     * Add a HAVING clause with A LIKE B.
+     *
+     * @param mixed $left The left operand
+     * @param mixed $right The right operand
+     *
+     * @return AbstractBuilder
+     */
+    public function havingLike($left, $right)
+    {
+        return $this->having($left, $right, 'LIKE');
+    }
+
+    /**
+     * Add a HAVING clause with A NOT LIKE B.
+     *
+     * @param mixed $left The left operand
+     * @param mixed $right The right operand
+     *
+     * @return AbstractBuilder
+     */
+    public function havingNotLike($left, $right)
+    {
+        return $this->having($left, $right, 'NOT LIKE');
+    }
+
+    /**
+     * Add a HAVING clause with A > B.
+     *
+     * @param mixed $left The left operand
+     * @param mixed $right The right operand
+     *
+     * @return AbstractBuilder
+     */
+    public function havingGt($left, $right)
+    {
+        return $this->having($left, $right, '>');
+    }
+
+    /**
+     * Add a HAVING clause with A >= B.
+     *
+     * @param mixed $left The left operand
+     * @param mixed $right The right operand
+     *
+     * @return AbstractBuilder
+     */
+    public function havingGte($left, $right)
+    {
+        return $this->having($left, $right, '>=');
+    }
+
+    /**
+     * Add a HAVING clause with A < B.
+     *
+     * @param mixed $left The left operand
+     * @param mixed $right The right operand
+     *
+     * @return AbstractBuilder
+     */
+    public function havingLt($left, $right)
+    {
+        return $this->having($left, $right, '<');
+    }
+
+    /**
+     * Add a HAVING clause with A <= B.
+     *
+     * @param mixed $left The left operand
+     * @param mixed $right The right operand
+     *
+     * @return AbstractBuilder
+     */
+    public function havingLte($left, $right)
+    {
+        return $this->having($left, $right, '<=');
+    }
+
+    /**
      * Add an ORDER BY clause.
      *
      * @param mixed $data The ORDER BY data
@@ -494,6 +616,7 @@ abstract class AbstractBuilder
             $this->renderJoin(),
             $this->renderWhere(),
             $this->renderGroupBy(),
+            $this->renderHaving(),
             $this->renderOrderBy(),
             $this->renderLimit(),
         ]));
@@ -649,74 +772,13 @@ abstract class AbstractBuilder
      */
     protected function renderWhere()
     {
-        if (0 === $this->where->count()) {
+        $where = $this->renderWhereOrHaving($this->where);
+
+        if (empty($where)) {
             return '';
         }
 
-        $where = 'WHERE ';
-
-        foreach ($this->where as $index => $data) {
-            if ($data instanceof ExpressionsInterface) {
-                $where .= $data->render().' ';
-
-                if (!$data instanceof OrOperator &&
-                    !$data instanceof OpenBracket &&
-                    $this->where->offsetExists($index + 1) &&
-                    !$this->where->offsetGet($index + 1) instanceof CloseBracket) {
-                    $where .= 'AND ';
-                }
-
-                continue;
-            }
-
-            // Get alias and values data
-            list($left_alias, $left_operand)    = $this->getAliasData($data['left']);
-            list($right_alias, $right_operand)  = $this->getAliasData($data['right']);
-
-            // Treats the left operand
-            if ($left_operand instanceof Literal) {
-                $left_operand = $left_operand->render();
-            } elseif ($left_operand instanceof Select) {
-                $left_operand = sprintf('(%s)', $left_operand->render());
-            } else {
-                $left_operand = self::quote($left_operand);
-            }
-
-            if (null !== $left_alias) {
-                $left = sprintf('%s.%s', self::quote($left_alias), $left_operand);
-            } else {
-                $left = $left_operand;
-            }
-
-            // Treats the right operand
-            if ($right_operand instanceof Literal) {
-                $right_operand = $right_operand->render();
-            } elseif ($right_operand instanceof Select) {
-                $right_operand = sprintf('(%s)', $right_operand->render());
-            } else {
-                $right_operand = self::escape($right_operand);
-            }
-
-            if (null !== $right_alias) {
-                $right = sprintf('%s.%s', self::quote($right_alias), $right_operand);
-            } else {
-                $right = $right_operand;
-            }
-
-            $where .= sprintf('%s %s %s ', $left, $data['operator'], $right);
-
-            /*
-             * If we have another WHERE part next and it is not a closing
-             * bracket or an OrOperator, we add an AND
-             */
-            if ($this->where->offsetExists($index + 1) &&
-                !$this->where->offsetGet($index + 1) instanceof CloseBracket &&
-                !$this->where->offsetGet($index + 1) instanceof OrOperator) {
-                $where .= 'AND ';
-            }
-        }
-
-        return trim($where);
+        return sprintf('WHERE %s', $where);
     }
 
     /**
@@ -751,6 +813,22 @@ abstract class AbstractBuilder
         }
 
         return trim(sprintf('GROUP BY %s', implode(', ', $group_by)));
+    }
+
+    /**
+     * Renders the HAVING parts.
+     *
+     * @return string
+     */
+    protected function renderHaving()
+    {
+        $having = $this->renderWhereOrHaving($this->having);
+
+        if (empty($having)) {
+            return '';
+        }
+
+        return sprintf('HAVING %s', $having);
     }
 
     /**
@@ -806,6 +884,83 @@ abstract class AbstractBuilder
         }
 
         return trim(sprintf('LIMIT %u, %u', $offset, $count));
+    }
+
+    /**
+     * Renders the WHERE or HAVING parts.
+     *
+     * @return string
+     */
+    protected function renderWhereOrHaving(SplQueue $render_data)
+    {
+        if (0 === $render_data->count()) {
+            return '';
+        }
+
+        $str = '';
+
+        foreach ($render_data as $index => $data) {
+            if ($data instanceof ExpressionsInterface) {
+                $str .= $data->render().' ';
+
+                if (!$data instanceof OrOperator &&
+                    !$data instanceof OpenBracket &&
+                    $render_data->offsetExists($index + 1) &&
+                    !$render_data->offsetGet($index + 1) instanceof CloseBracket) {
+                    $str .= 'AND ';
+                }
+
+                continue;
+            }
+
+            // Get alias and values data
+            list($left_alias, $left_operand)    = $this->getAliasData($data['left']);
+            list($right_alias, $right_operand)  = $this->getAliasData($data['right']);
+
+            // Treats the left operand
+            if ($left_operand instanceof Literal) {
+                $left_operand = $left_operand->render();
+            } elseif ($left_operand instanceof Select) {
+                $left_operand = sprintf('(%s)', $left_operand->render());
+            } else {
+                $left_operand = self::quote($left_operand);
+            }
+
+            if (null !== $left_alias) {
+                $left = sprintf('%s.%s', self::quote($left_alias), $left_operand);
+            } else {
+                $left = $left_operand;
+            }
+
+            // Treats the right operand
+            if ($right_operand instanceof Literal) {
+                $right_operand = $right_operand->render();
+            } elseif ($right_operand instanceof Select) {
+                $right_operand = sprintf('(%s)', $right_operand->render());
+            } else {
+                $right_operand = self::escape($right_operand);
+            }
+
+            if (null !== $right_alias) {
+                $right = sprintf('%s.%s', self::quote($right_alias), $right_operand);
+            } else {
+                $right = $right_operand;
+            }
+
+            $str .= sprintf('%s %s %s ', $left, $data['operator'], $right);
+
+            /*
+             * If we have another WHERE part next and it is not a closing
+             * bracket or an OrOperator, we add an AND
+             */
+            if ($render_data->offsetExists($index + 1) &&
+                !$render_data->offsetGet($index + 1) instanceof CloseBracket &&
+                !$render_data->offsetGet($index + 1) instanceof OrOperator) {
+                $str .= 'AND ';
+            }
+        }
+
+        return trim($str);
     }
 
     /**
