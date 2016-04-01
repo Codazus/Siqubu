@@ -56,7 +56,7 @@ class SelectTest extends PHPUnit_Framework_TestCase
     {
         $expected = 'SELECT `users`.`id`, `firstname`, `lastname`, `c`.`id`, `title` FROM `users` '
             . 'INNER JOIN `civilitytitles` `c` ON `id_civility` = `c`.`id` LEFT JOIN `orders` ON `users`.`id` = `orders`.`id_user` '
-            . 'WHERE `orders`.`id` != NULL GROUP BY `users`.`id` ORDER BY MAX(`total_tax_inclusive`)';
+            . 'WHERE `orders`.`id` != NULL GROUP BY `users`.`id` HAVING SUM(total_tax_inclusive) >= \'5000\' ORDER BY MAX(`total_tax_inclusive`)';
 
         // Columns can be passed in the constructor
         $builder = (new Select([['users' => 'id'], 'firstname', 'lastname', ['c' => 'id'], 'title']))
@@ -65,6 +65,7 @@ class SelectTest extends PHPUnit_Framework_TestCase
             ->leftJoin('orders', [[['users' => 'id'], ['orders' => 'id_user']]])
             ->whereNot(['orders' => 'id'], null)
             ->groupBy(['users' => 'id'])
+            ->havingGte(new Literal('SUM(total_tax_inclusive)'), 5000)
             ->orderBy(new Literal(sprintf('MAX(%s)', AbstractBuilder::quote('total_tax_inclusive'))))
         ;
 
