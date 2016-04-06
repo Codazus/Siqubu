@@ -55,7 +55,13 @@ class Select extends AbstractBuilder
     {
         return implode(' ', array_filter([
             $this->renderSelect(),
-            parent::render(),
+            $this->renderFrom(),
+            $this->renderJoin(),
+            $this->renderWhere(),
+            $this->renderGroupBy(),
+            $this->renderHaving(),
+            $this->renderOrderBy(),
+            $this->renderLimit(),
         ]));
     }
 

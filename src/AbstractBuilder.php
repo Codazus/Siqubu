@@ -609,18 +609,7 @@ abstract class AbstractBuilder
      *
      * @return string
      */
-    protected function render()
-    {
-        return implode(' ', array_filter([
-            $this->renderFrom(),
-            $this->renderJoin(),
-            $this->renderWhere(),
-            $this->renderGroupBy(),
-            $this->renderHaving(),
-            $this->renderOrderBy(),
-            $this->renderLimit(),
-        ]));
-    }
+    abstract protected function render();
 
     /**
      * Add a JOIN (INNER, LEFT, RIGHT, NATURAL, CROSS, FULL).
