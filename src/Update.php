@@ -65,11 +65,21 @@ class Update extends AbstractBuilder
         ]));
     }
 
+    /**
+     * Renders the UPDATE part.
+     *
+     * @return string
+     */
     protected function renderUpdate()
     {
         return sprintf('UPDATE %s', $this->table);
     }
 
+    /**
+     * Renders the SET parts.
+     *
+     * @return string
+     */
     protected function renderSet()
     {
         $fields = [];
