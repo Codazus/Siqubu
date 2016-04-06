@@ -3,7 +3,7 @@
 namespace YAQB;
 
 /**
- * Select builder.
+ * Delete builder.
  */
 class Delete extends AbstractBuilder
 {
