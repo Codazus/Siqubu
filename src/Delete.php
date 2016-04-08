@@ -1,6 +1,6 @@
 <?php
 
-namespace YAQB;
+namespace Siqubu;
 
 /**
  * Delete builder.

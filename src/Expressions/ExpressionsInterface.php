@@ -1,6 +1,6 @@
 <?php
 
-namespace YAQB\Expressions;
+namespace Siqubu\Expressions;
 
 interface ExpressionsInterface
 {

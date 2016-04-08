@@ -1,16 +1,16 @@
 <?php
 
-namespace YAQB;
+namespace Siqubu;
 
 use InvalidArgumentException;
 use mysqli;
 use PDO;
 use SplQueue;
-use YAQB\Expressions\CloseBracket;
-use YAQB\Expressions\ExpressionsInterface;
-use YAQB\Expressions\Literal;
-use YAQB\Expressions\OpenBracket;
-use YAQB\Expressions\OrOperator;
+use Siqubu\Expressions\CloseBracket;
+use Siqubu\Expressions\ExpressionsInterface;
+use Siqubu\Expressions\Literal;
+use Siqubu\Expressions\OpenBracket;
+use Siqubu\Expressions\OrOperator;
 
 /**
  * Abstract builder used by Select, Update, Insert and Delete.

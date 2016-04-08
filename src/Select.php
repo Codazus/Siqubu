@@ -1,8 +1,8 @@
 <?php
 
-namespace YAQB;
+namespace Siqubu;
 
-use YAQB\Expressions\Literal;
+use Siqubu\Expressions\Literal;
 
 /**
  * Select builder.
@@ -28,8 +28,8 @@ class Select extends AbstractBuilder
      *
      * @param string|array $columns Columns to select.<br />
      * - If a string is passed, the value will be quoted,
-     * - if a \YAQB\Literal is passed, he will be rendered,
-     * - if a \YAQB\Select is passed, he will be rendered,
+     * - if a \Siqubu\Literal is passed, he will be rendered,
+     * - if a \Siqubu\Select is passed, he will be rendered,
      * - if an array is passed the key will be the table name and his value
      * the field.
      *

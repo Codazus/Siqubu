@@ -1,8 +1,8 @@
 <?php
 
-use YAQB\AbstractBuilder;
-use YAQB\Expressions\Literal;
-use YAQB\Delete;
+use Siqubu\AbstractBuilder;
+use Siqubu\Expressions\Literal;
+use Siqubu\Delete;
 
 class DeleteTest extends PHPUnit_Framework_TestCase
 {

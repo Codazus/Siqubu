@@ -1,4 +1,4 @@
-# YAQB
-Yet Another Query Builder
+# Siqubu
+Simple Query Builder
 
-[![Build Status](https://travis-ci.org/Codazus/YAQB.svg?branch=master)](https://travis-ci.org/Codazus/YAQB)
+[![Build Status](https://travis-ci.org/Codazus/Siqubu.svg?branch=master)](https://travis-ci.org/Codazus/Siqubu)

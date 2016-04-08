@@ -1,8 +1,8 @@
 <?php
 
-use YAQB\AbstractBuilder;
-use YAQB\Expressions\Literal;
-use YAQB\Select;
+use Siqubu\AbstractBuilder;
+use Siqubu\Expressions\Literal;
+use Siqubu\Select;
 
 class SelectTest extends PHPUnit_Framework_TestCase
 {

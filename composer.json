@@ -1,8 +1,8 @@
 {
-    "name": "codazus/yaqb",
+    "name": "codazus/siqubu",
     "type": "library",
-    "description": "Yet Another Query Builder",
-    "keywords": ["mysql","query","builder"],
+    "description": "Simple Query Builder",
+    "keywords": ["mysql","simple","query","builder"],
     "license": "MIT",
     "authors": [
         {
@@ -13,9 +13,9 @@
     ],
     "support": {
         "email": "contact@djlechuck.fr",
-        "issues": "https://github.com/Codazus/YAQB/issues",
-        "source": "https://github.com/Codazus/YAQB",
-        "docs": "https://github.com/Codazus/YAQB/wiki"
+        "issues": "https://github.com/Codazus/Siqubu/issues",
+        "source": "https://github.com/Codazus/Siqubu",
+        "docs": "https://github.com/Codazus/Siqubu/wiki"
     },
     "require": {
         "php": ">=5.4.0"
@@ -31,7 +31,7 @@
     },
     "autoload": {
         "psr-4": {
-            "YAQB\\": "src/"
+            "Siqubu\\": "src/"
         }
     }
 }

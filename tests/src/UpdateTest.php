@@ -1,9 +1,9 @@
 <?php
 
-use YAQB\AbstractBuilder;
-use YAQB\Expressions\Literal;
-use YAQB\Select;
-use YAQB\Update;
+use Siqubu\AbstractBuilder;
+use Siqubu\Expressions\Literal;
+use Siqubu\Select;
+use Siqubu\Update;
 
 class UpdateTest extends PHPUnit_Framework_TestCase
 {
