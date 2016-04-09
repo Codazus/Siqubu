@@ -15,7 +15,7 @@
         "email": "contact@djlechuck.fr",
         "issues": "https://github.com/Codazus/Siqubu/issues",
         "source": "https://github.com/Codazus/Siqubu",
-        "docs": "https://github.com/Codazus/Siqubu/wiki"
+        "docs": "https://siqubu.djlechuck.fr/"
     },
     "require": {
         "php": ">=5.4.0"
