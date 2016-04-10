@@ -2,11 +2,22 @@
 
 namespace Siqubu;
 
+use Siqubu\Features\JoinInterface;
+use Siqubu\Features\JoinTrait;
+use Siqubu\Features\LimitTrait;
+use Siqubu\Features\OrderByTrait;
+use Siqubu\Features\SetTrait;
+use Siqubu\Features\WhereOrHavingTrait;
+use Siqubu\Features\WhereTrait;
+use SplQueue;
+
 /**
  * Update builder.
  */
-class Update extends AbstractBuilder
+class Update extends AbstractBuilder implements JoinInterface
 {
+    use JoinTrait, SetTrait, WhereTrait, WhereOrHavingTrait, OrderByTrait, LimitTrait;
+
     /**
      * Table to update.
      *
@@ -15,37 +26,15 @@ class Update extends AbstractBuilder
     protected $table;
 
     /**
-     * Values to set.
-     *
-     * @var array
-     */
-    protected $set_values = [];
-
-    /**
      * Constructor.
      *
      * @param string $table The table to UPDATE
      */
     public function __construct($table)
     {
-        parent::__construct();
-
-        $this->table = (string) $table;
-    }
-
-    /**
-     * Set a new value to a column.
-     *
-     * @param string $column Column to set
-     * @param mixed $value Value applied to the column
-     *
-     * @return Update
-     */
-    public function set($column, $value)
-    {
-        $this->set_values[$column] = $value;
-
-        return $this;
+        $this->join     = new SplQueue();
+        $this->where    = new SplQueue();
+        $this->table    = (string) $table;
     }
 
     /**
@@ -73,44 +62,5 @@ class Update extends AbstractBuilder
     protected function renderUpdate()
     {
         return sprintf('UPDATE %s', $this->table);
-    }
-
-    /**
-     * Renders the SET parts.
-     *
-     * @return string
-     */
-    protected function renderSet()
-    {
-        $fields = [];
-
-        if (empty($this->set_values)) {
-            return '';
-        }
-
-        foreach ($this->set_values as $field => $value) {
-            list($field_alias, $field_value) = $this->getAliasData($field);
-
-            // If Literal, render as is...
-            if ($value instanceof Literal) {
-                $value = $value->render();
-            // ... if Select, render as is...
-            } elseif ($value instanceof Select) {
-                $value = sprintf('(%s)', $value->render());
-            // ... else escape value.
-            } else {
-                $value = self::escape($value);
-            }
-
-            if (null !== $field_alias) {
-                $field = sprintf('%s.%s', $field_alias, $field_value);
-            } else {
-                $field = $field_value;
-            }
-
-            $fields[] = sprintf('%s = %s', $field, $value);
-        }
-
-        return trim(sprintf('SET %s', implode(', ', $fields)));
     }
 }
