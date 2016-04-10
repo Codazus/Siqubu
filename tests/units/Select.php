@@ -30,17 +30,21 @@ class Select extends atoum\test
         ;
 
         // Add some WHERE clauses
-        $expected .= ' WHERE email LIKE \'%@domain.tld\' AND disabled != 1 AND date_last_connexion > DATE_SUB(NOW(), INTERVAL 3 DAYS)';
+        $expected   .= ' WHERE email LIKE :email AND disabled != 1 AND date_last_connexion > DATE_SUB(NOW(), INTERVAL 3 DAYS)';
+        $parameters = [':email' => '%@domain.tld'];
 
         $builder
-            ->whereLike('email', '%@domain.tld')
+            ->whereLike('email', ':email')
             ->whereNot('disabled', true)
             ->whereGt('date_last_connexion', new Literal('DATE_SUB(NOW(), INTERVAL 3 DAYS)'))
+            ->setParameters($parameters)
         ;
 
         $this
             ->string($this->testedInstance->render())
                 ->isEqualTo($expected)
+            ->array($this->testedInstance->getParameters())
+                ->isEqualTo($parameters)
         ;
 
         // Add ORDER BY and LIMIT
@@ -65,13 +69,13 @@ class Select extends atoum\test
     {
         $expected   = 'SELECT users.id, firstname, lastname, c.id, title FROM users '
             . 'INNER JOIN civilitytitles c ON id_civility = c.id LEFT JOIN orders ON users.id = orders.id_user '
-            . 'WHERE orders.id != NULL GROUP BY users.id HAVING SUM(total_tax_inclusive) >= \'5000\' ORDER BY MAX(total_tax_inclusive)';
-        $builder    = (new SelectBuilder(['users' => 'id'], 'firstname', 'lastname', ['c' => 'id'], 'title'))
+            . 'WHERE orders.id != NULL GROUP BY users.id HAVING SUM(total_tax_inclusive) >= 5000 ORDER BY MAX(total_tax_inclusive)';
+        $builder    = (new SelectBuilder('users.id', 'firstname', 'lastname', 'c.id', 'title'))
             ->from('users')
-            ->innerJoin(['c' => 'civilitytitles'], ['id_civility', ['c' => 'id']])
-            ->leftJoin('orders', [['users' => 'id'], ['orders' => 'id_user']])
-            ->whereNot(['orders' => 'id'], null)
-            ->groupBy(['users' => 'id'])
+            ->innerJoin(['civilitytitles', 'c'], ['id_civility', 'c.id'])
+            ->leftJoin('orders', ['users.id', 'orders.id_user'])
+            ->whereNot('orders.id', null)
+            ->groupBy('users.id')
             ->havingGte(new Literal('SUM(total_tax_inclusive)'), 5000)
             ->orderBy(new Literal('MAX(total_tax_inclusive)'))
         ;

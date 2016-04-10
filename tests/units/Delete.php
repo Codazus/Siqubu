@@ -3,7 +3,6 @@
 namespace Siqubu\tests\units;
 
 use atoum;
-use Siqubu\Expressions\Literal;
 
 class Delete extends atoum\test
 {
@@ -25,17 +24,21 @@ class Delete extends atoum\test
         ;
 
         // Add some WHERE clauses
-        $expected .= ' WHERE email LIKE \'%@domain.tld\' AND disabled != 1 AND date_last_connexion > DATE_SUB(NOW(), INTERVAL 3 DAYS)';
+        $expected   .= ' WHERE email LIKE :email AND disabled != :disabled AND date_last_connexion > DATE_SUB(NOW(), INTERVAL 3 DAYS)';
+        $parameters = [':email' => '%@domain.tld', ':disabled' => true];
 
         $builder
-            ->whereLike('email', '%@domain.tld')
-            ->whereNot('disabled', true)
-            ->whereGt('date_last_connexion', new Literal('DATE_SUB(NOW(), INTERVAL 3 DAYS)'))
+            ->whereLike('email', ':email')
+            ->whereNot('disabled', ':disabled')
+            ->whereGt('date_last_connexion', 'DATE_SUB(NOW(), INTERVAL 3 DAYS)')
+            ->setParameters($parameters)
         ;
 
         $this
             ->string($this->testedInstance->render())
                 ->isEqualTo($expected)
+            ->integer(count($this->testedInstance->getParameters()))
+                ->isEqualTo(2)
         ;
 
         // Add ORDER BY and LIMIT
@@ -63,10 +66,10 @@ class Delete extends atoum\test
 
         $this->newTestedInstance
             ->from('users')
-            ->innerJoin(['c' => 'civilitytitles'], ['id_civility', ['c' => 'id']])
-            ->leftJoin('orders', [['users' => 'id'], ['orders' => 'id_user']])
-            ->whereNot(['orders' => 'id'], null)
-            ->orderBy(new Literal('MAX(total_tax_inclusive)'))
+            ->innerJoin(['civilitytitles', 'c'], ['id_civility', 'c.id'])
+            ->leftJoin('orders', ['users.id', 'orders.id_user'])
+            ->whereNot('orders.id', null)
+            ->orderBy('MAX(total_tax_inclusive)')
         ;
 
         $this

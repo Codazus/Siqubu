@@ -2,7 +2,6 @@
 namespace Siqubu\tests\units;
 
 use atoum;
-use Siqubu\Expressions\Literal;
 use Siqubu\Select as SelectBuilder;
 
 class Update extends atoum\test
@@ -12,10 +11,11 @@ class Update extends atoum\test
      */
     public function testSimpleUpdate()
     {
-        $expected   = 'UPDATE users SET lastname = \'Doe\', firstname = \'John\'';
+        $expected   = 'UPDATE users SET lastname = :lastname, firstname = :firstname';
         $builder    = $this->newTestedInstance('users')
-            ->set('lastname', 'Doe')
-            ->set('firstname', 'John')
+            ->set('lastname', ':lastname')
+            ->set('firstname', ':firstname')
+            ->setParameters([':firstname' => 'John', ':lastname' => 'Doe'])
         ;
 
         $this
@@ -26,12 +26,13 @@ class Update extends atoum\test
         ;
 
         // Add some WHERE clauses
-        $expected .= ' WHERE email LIKE \'%@domain.tld\' AND disabled != 1 AND date_last_connexion > DATE_SUB(NOW(), INTERVAL 3 DAYS)';
+        $expected .= ' WHERE email LIKE :email AND disabled != 1 AND date_last_connexion > DATE_SUB(NOW(), INTERVAL 3 DAYS)';
 
         $builder
-            ->whereLike('email', '%@domain.tld')
+            ->whereLike('email', ':email')
             ->whereNot('disabled', true)
-            ->whereGt('date_last_connexion', new Literal('DATE_SUB(NOW(), INTERVAL 3 DAYS)'))
+            ->whereGt('date_last_connexion', 'DATE_SUB(NOW(), INTERVAL 3 DAYS)')
+            ->setParameters([':email' => '%@domain.tld'])
         ;
 
         $this
@@ -43,7 +44,7 @@ class Update extends atoum\test
         $expected .= ' ORDER BY lastname, firstname LIMIT 10';
 
         $builder
-            ->orderBy(['lastname', 'firstname'])
+            ->orderBy('lastname', 'firstname')
             ->limit(10)
         ;
 
@@ -65,15 +66,15 @@ class Update extends atoum\test
 
         $select_name = (new SelectBuilder('firstname'))
             ->from('members', 'm')
-            ->where(['m' => 'email'], ['users' => new Literal('email')])
+            ->where('m.email', 'users.email')
         ;
 
         $this->newTestedInstance('users')
-            ->innerJoin(['c' => 'civilitytitles'], ['id_civility', ['c' => 'id']])
-            ->leftJoin('orders', [['users' => 'id'], ['orders' => 'id_user']])
+            ->innerJoin(['civilitytitles', 'c'], ['id_civility', 'c.id'])
+            ->leftJoin('orders', ['users.id', 'orders.id_user'])
             ->set('firstname', $select_name)
-            ->whereNot(['orders' => 'id'], null)
-            ->orderBy(new Literal('MAX(total_tax_inclusive)'))
+            ->whereNot('orders.id', null)
+            ->orderBy('MAX(total_tax_inclusive)')
         ;
 
         $this
