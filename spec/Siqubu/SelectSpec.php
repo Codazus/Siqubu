@@ -3,7 +3,6 @@
 namespace spec\Siqubu;
 
 use PhpSpec\ObjectBehavior;
-use Prophecy\Argument;
 
 class SelectSpec extends ObjectBehavior
 {
@@ -16,6 +15,6 @@ class SelectSpec extends ObjectBehavior
         $this->from('users')
             ->select(['id', 'firstname', 'lastname'])
             ->render()
-            ->shouldReturn('SELECT `id`, `firstname`, `lastname` FROM `users`');
+            ->shouldReturn('SELECT id, firstname, lastname FROM users');
     }
 }
