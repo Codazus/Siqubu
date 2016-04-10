@@ -23,22 +23,7 @@ trait GroupByTrait
      */
     public function groupBy($data)
     {
-        if (!is_array($data)) {
-            $data = [$data];
-        }
-
-        // If $args contains more than 1 data, we add them to existing columns.
-        if (1 < func_num_args()) {
-            $data = array_merge($data, array_slice(func_get_args(), 1));
-        }
-
-        foreach ($data as $key => $value) {
-            if (!is_numeric($key)) {
-                $value = [$key => $value];
-            }
-
-            $this->group_by[] = $value;
-        }
+        $this->group_by = array_merge($this->group_by, is_array($data) ? $data : func_get_args());
 
         return $this;
     }
@@ -56,17 +41,11 @@ trait GroupByTrait
 
         $group_by = [];
 
-        foreach ($this->group_by as $group_data) {
-            list($alias, $value) = $this->getAliasData($group_data);
-
+        foreach ($this->group_by as $value) {
             if ($value instanceof Literal) {
                 $value = $value->render();
             } elseif ($value instanceof Select) {
                 $value = sprintf('(%s)', $value->render());
-            }
-
-            if (null !== $alias) {
-                $value = sprintf('%s.%s', $alias, $value);
             }
 
             $group_by[] = $value;

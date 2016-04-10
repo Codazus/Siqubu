@@ -43,23 +43,14 @@ trait SetTrait
         }
 
         foreach ($this->set_values as $field => $value) {
-            list($field_alias, $field_value) = $this->getAliasData($field);
-
             // If Literal, render as is...
             if ($value instanceof Literal) {
                 $value = $value->render();
             // ... if Select, render as is...
             } elseif ($value instanceof Select) {
                 $value = sprintf('(%s)', $value->render());
-            // ... else escape value.
             } else {
-                $value = self::escape($value);
-            }
-
-            if (null !== $field_alias) {
-                $field = sprintf('%s.%s', $field_alias, $field_value);
-            } else {
-                $field = $field_value;
+                $value = null === $value ? 'NULL' : $value;
             }
 
             $fields[] = sprintf('%s = %s', $field, $value);

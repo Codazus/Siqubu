@@ -39,36 +39,22 @@ trait WhereOrHavingTrait
                 continue;
             }
 
-            // Get alias and values data
-            list($left_alias, $left_operand)    = $this->getAliasData($data['left']);
-            list($right_alias, $right_operand)  = $this->getAliasData($data['right']);
-
             // Treats the left operand
-            if ($left_operand instanceof Literal) {
-                $left_operand = $left_operand->render();
-            } elseif ($left_operand instanceof Select) {
-                $left_operand = sprintf('(%s)', $left_operand->render());
-            }
-
-            if (null !== $left_alias) {
-                $left = sprintf('%s.%s', $left_alias, $left_operand);
+            if ($data['left'] instanceof Literal) {
+                $left = $data['left']->render();
+            } elseif ($data['left'] instanceof Select) {
+                $left = sprintf('(%s)', $data['left']->render());
             } else {
-                $left = $left_operand;
+                $left = $data['left'];
             }
 
             // Treats the right operand
-            if ($right_operand instanceof Literal) {
-                $right_operand = $right_operand->render();
-            } elseif ($right_operand instanceof Select) {
-                $right_operand = sprintf('(%s)', $right_operand->render());
+            if ($data['right'] instanceof Literal) {
+                $right = $data['right']->render();
+            } elseif ($data['right'] instanceof Select) {
+                $right = sprintf('(%s)', $data['right']->render());
             } else {
-                $right_operand = self::escape($right_operand);
-            }
-
-            if (null !== $right_alias) {
-                $right = sprintf('%s.%s', $right_alias, $right_operand);
-            } else {
-                $right = $right_operand;
+                $right = null === $data['right'] ? 'NULL' : $data['right'];
             }
 
             $str .= sprintf('%s %s %s ', $left, $data['operator'], $right);

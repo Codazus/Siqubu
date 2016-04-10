@@ -28,16 +28,7 @@ trait SelectTrait
      */
     public function select($columns)
     {
-        if (!is_array($columns)) {
-            $columns = [$columns];
-        }
-
-        // If $args contains more than 1 data, we add them to existing columns.
-        if (1 < func_num_args()) {
-            $columns = array_merge($columns, array_slice(func_get_args(), 1));
-        }
-
-        $this->columns = array_merge($this->columns, $columns);
+        $this->columns = array_merge($this->columns, is_array($columns) ? $columns : func_get_args());
 
         return $this;
     }
@@ -52,28 +43,22 @@ trait SelectTrait
         $fields = [];
 
         if (empty($this->columns)) {
-            $this->columns = [self::WILDCARD];
+            $this->columns = self::WILDCARD;
         }
 
-        foreach ($this->columns as $alias => $field) {
-            list($field_alias, $field_value) = $this->getAliasData($field);
+        foreach ($this->columns as $data) {
+            list($field, $alias) = is_array($data) ? $data : [$data, null];
 
             // If Literal, render as is...
-            if ($field_value instanceof Literal) {
-                $field_value = $field_value->render();
+            if ($field instanceof Literal) {
+                $field = $field->render();
             // ... if Select, render as is...
-            } elseif ($field_value instanceof Select) {
-                $field_value = sprintf('(%s)', $field_value->render());
+            } elseif ($field instanceof Select) {
+                $field = sprintf('(%s)', $field->render());
             }
 
-            if (null !== $field_alias) {
-                $field = sprintf('%s.%s', $field_alias, $field_value);
-            } else {
-                $field = $field_value;
-            }
-
-            if (!is_numeric($alias)) {
-                $field = sprintf('%s %s', $field, $alias);
+            if (null !== $alias) {
+                $field = trim(sprintf('%s %s', $field, $alias));
             }
 
             $fields[] = $field;

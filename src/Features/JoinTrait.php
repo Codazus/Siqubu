@@ -23,92 +23,92 @@ trait JoinTrait
     /**
      * Add a INNER JOIN.
      *
-     * @param mixed $data Data of the JOIN
+     * @param mixed $table Table of the JOIN
      * @param array $conditions Conditions of the JOIN
      *
      * @return JoinTrait
      */
-    public function innerJoin($data, array $conditions = [])
+    public function innerJoin($table, array $conditions = [])
     {
-        return $this->join(self::INNER_JOIN, $data, $conditions, func_get_args());
+        return $this->join(self::INNER_JOIN, $table, $conditions, func_get_args());
     }
 
     /**
      * Add a LEFT JOIN.
      *
-     * @param mixed $data Data of the JOIN
+     * @param mixed $table Table of the join
      * @param array $conditions Conditions of the JOIN
      *
      * @return JoinTrait
      */
-    public function leftJoin($data, array $conditions = [])
+    public function leftJoin($table, array $conditions = [])
     {
-        return $this->join(self::LEFT_JOIN, $data, $conditions, func_get_args());
+        return $this->join(self::LEFT_JOIN, $table, $conditions, func_get_args());
     }
 
     /**
      * Add a RIGHT JOIN.
      *
-     * @param mixed $data Data of the JOIN
+     * @param mixed $table Table of the join
      * @param array $conditions Conditions of the JOIN
      *
      * @return JoinTrait
      */
-    public function rightJoin($data, array $conditions = [])
+    public function rightJoin($table, array $conditions = [])
     {
-        return $this->join(self::RIGHT_JOIN, $data, $conditions, func_get_args());
+        return $this->join(self::RIGHT_JOIN, $table, $conditions, func_get_args());
     }
 
     /**
      * Add a CROSS JOIN.
      *
-     * @param mixed $data Data of the JOIN
+     * @param mixed $table Table of the join
      * @param array $conditions Conditions of the JOIN
      *
      * @return JoinTrait
      */
-    public function crossJoin($data, array $conditions = [])
+    public function crossJoin($table, array $conditions = [])
     {
-        return $this->join(self::CROSS_JOIN, $data, $conditions, func_get_args());
+        return $this->join(self::CROSS_JOIN, $table, $conditions, func_get_args());
     }
 
     /**
      * Add a FULL JOIN.
      *
-     * @param mixed $data Data of the JOIN
+     * @param mixed $table Table of the join
      * @param array $conditions Conditions of the JOIN
      *
      * @return JoinTrait
      */
-    public function fullJoin($data, array $conditions = [])
+    public function fullJoin($table, array $conditions = [])
     {
-        return $this->join(self::FULL_JOIN, $data, $conditions, func_get_args());
+        return $this->join(self::FULL_JOIN, $table, $conditions, func_get_args());
     }
 
     /**
      * Add a NATURAL JOIN.
      *
-     * @param mixed $data Data of the JOIN
+     * @param mixed $table Table of the join
      * @param array $conditions Conditions of the JOIN
      *
      * @return JoinTrait
      */
-    public function naturalJoin($data, array $conditions = [])
+    public function naturalJoin($table, array $conditions = [])
     {
-        return $this->join(self::NATURAL_JOIN, $data, $conditions, func_get_args());
+        return $this->join(self::NATURAL_JOIN, $table, $conditions, func_get_args());
     }
 
     /**
      * Add a JOIN (INNER, LEFT, RIGHT, NATURAL, CROSS, FULL).
      *
      * @param string $type Type of JOIN
-     * @param mixed $data Data of the JOIN
+     * @param mixed $table Table of the join
      * @param array $conditions Conditions of the JOIN
      * @param array $args Extra arguments passed
      *
      * @return JoinTrait
      */
-    protected function join($type, $data, array $conditions = [], array $args = [])
+    protected function join($type, $table, array $conditions = [], array $args = [])
     {
         if (!in_array($type, [
             self::CROSS_JOIN, self::FULL_JOIN, self::INNER_JOIN,
@@ -141,7 +141,7 @@ trait JoinTrait
 
         $this->join->push([
             'type'          => $type,
-            'data'          => $data,
+            'table'         => is_array($table) ? $table : [$table, null],
             'conditions'    => $queue_conditions,
         ]);
 
@@ -164,7 +164,7 @@ trait JoinTrait
         $str = '';
 
         foreach ($this->join as $join_data) {
-            list($alias, $table) = $this->getAliasData($join_data['data']);
+            list($table, $alias) = $join_data['table'];
 
             if ($table instanceof Select) {
                 $table = sprintf('(%s)', $table->render());
@@ -192,25 +192,18 @@ trait JoinTrait
                     continue;
                 }
 
-                list($from_alias, $from_table)  = $this->getAliasData($data[0]);
-                list($to_alias, $to_table)      = $this->getAliasData($data[1]);
+                list($from, $to) = $data;
 
-                if (null !== $from_alias) {
-                    $from = sprintf('%s.%s', $from_alias, $from_table);
-                } else {
-                    $from = $from_table;
+                if ($from instanceof Literal) {
+                    $from = $from->render();
+                } elseif ($from instanceof Select) {
+                    $from = sprintf('(%s)', $from->render());
                 }
 
-                if ($to_table instanceof Literal) {
-                    $to_table = $to_table->render();
-                } elseif ($to_table instanceof Select) {
-                    $to_table = sprintf('(%s)', $to_table->render());
-                }
-
-                if (null !== $to_alias) {
-                    $to = sprintf('%s.%s', $to_alias, $to_table);
-                } else {
-                    $to = $to_table;
+                if ($to instanceof Literal) {
+                    $to = $to->render();
+                } elseif ($to instanceof Select) {
+                    $to = sprintf('(%s)', $to->render());
                 }
 
                 $str .= sprintf('%s = %s ', $from, $to);

@@ -32,7 +32,7 @@ trait FromTrait
             throw new InvalidArgumentException('Every derived table must have its own alias.');
         }
 
-        $this->from = [$alias => $table];
+        $this->from = [$alias, $table];
 
         return $this;
     }
@@ -44,7 +44,7 @@ trait FromTrait
      */
     protected function renderFrom()
     {
-        list($alias, $table) = $this->getAliasData($this->from);
+        list($alias, $table) = $this->from;
 
         if ($table instanceof Select) {
             $table = sprintf('(%s)', $table->render());
