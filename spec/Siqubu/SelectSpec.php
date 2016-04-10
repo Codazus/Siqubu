@@ -13,7 +13,7 @@ class SelectSpec extends ObjectBehavior
 
     function it_returns_sql_string() {
         $this->from('users')
-            ->select(['id', 'firstname', 'lastname'])
+            ->select('id', 'firstname', 'lastname')
             ->render()
             ->shouldReturn('SELECT id, firstname, lastname FROM users');
     }
