@@ -1,10 +1,11 @@
 <?php
 
-use Siqubu\AbstractBuilder;
-use Siqubu\Expressions\Literal;
-use Siqubu\Delete;
+namespace Siqubu\tests\units;
 
-class DeleteTest extends PHPUnit_Framework_TestCase
+use atoum;
+use Siqubu\Expressions\Literal;
+
+class Delete extends atoum\test
 {
     /**
      * Test a simple DELETE query.
@@ -12,11 +13,16 @@ class DeleteTest extends PHPUnit_Framework_TestCase
     public function testSimpleDelete()
     {
         $expected   = 'DELETE FROM users';
-        $builder    = (new Delete())
+        $builder    = $this->newTestedInstance
             ->from('users')
         ;
 
-        $this->assertEquals($expected, $builder->render());
+        $this
+            ->given($this->testedInstance)
+            ->then
+                ->string($this->testedInstance->render())
+                    ->isEqualTo($expected)
+        ;
 
         // Add some WHERE clauses
         $expected .= ' WHERE email LIKE \'%@domain.tld\' AND disabled != 1 AND date_last_connexion > DATE_SUB(NOW(), INTERVAL 3 DAYS)';
@@ -27,7 +33,10 @@ class DeleteTest extends PHPUnit_Framework_TestCase
             ->whereGt('date_last_connexion', new Literal('DATE_SUB(NOW(), INTERVAL 3 DAYS)'))
         ;
 
-        $this->assertEquals($expected, $builder->render());
+        $this
+            ->string($this->testedInstance->render())
+                ->isEqualTo($expected)
+        ;
 
         // Add ORDER BY and LIMIT
         $expected .= ' ORDER BY lastname, firstname LIMIT 10';
@@ -37,7 +46,10 @@ class DeleteTest extends PHPUnit_Framework_TestCase
             ->limit(10)
         ;
 
-        $this->assertEquals($expected, $builder->render());
+        $this
+            ->string($this->testedInstance->render())
+                ->isEqualTo($expected)
+        ;
     }
 
     /**
@@ -49,7 +61,7 @@ class DeleteTest extends PHPUnit_Framework_TestCase
             . 'INNER JOIN civilitytitles c ON id_civility = c.id LEFT JOIN orders ON users.id = orders.id_user '
             . 'WHERE orders.id != NULL ORDER BY MAX(total_tax_inclusive)';
 
-        $builder = (new Delete())
+        $this->newTestedInstance
             ->from('users')
             ->innerJoin(['c' => 'civilitytitles'], ['id_civility', ['c' => 'id']])
             ->leftJoin('orders', [['users' => 'id'], ['orders' => 'id_user']])
@@ -57,6 +69,11 @@ class DeleteTest extends PHPUnit_Framework_TestCase
             ->orderBy(new Literal('MAX(total_tax_inclusive)'))
         ;
 
-        $this->assertEquals($expected, $builder->render());
+        $this
+            ->given($this->testedInstance)
+            ->then
+                ->string($this->testedInstance->render())
+                    ->isEqualTo($expected)
+        ;
     }
 }

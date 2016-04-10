@@ -26,8 +26,7 @@
         "symfony/finder": "~2.8",
         "symfony/process": "~2.8",
         "symfony/yaml": "~2.8",
-        "phpunit/phpunit": "~4.8",
-        "phpspec/phpspec": "~2.0"
+        "atoum/atoum": "^2.6"
     },
     "autoload": {
         "psr-4": {

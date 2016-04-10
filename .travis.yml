@@ -10,8 +10,7 @@ php:
 before_script: composer install -q
 
 script:
-  - phpunit
-  - vendor/bin/phpspec run
+  - vendor/bin/atoum
 
 notifications:
   email:
