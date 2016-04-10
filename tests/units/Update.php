@@ -60,12 +60,12 @@ class Update extends atoum\test
     {
         $expected = 'UPDATE users '
             . 'INNER JOIN civilitytitles c ON id_civility = c.id LEFT JOIN orders ON users.id = orders.id_user '
-            . 'SET firstname = (SELECT firstname FROM members WHERE email = users.email) '
+            . 'SET firstname = (SELECT firstname FROM members m WHERE m.email = users.email) '
             . 'WHERE orders.id != NULL ORDER BY MAX(total_tax_inclusive)';
 
         $select_name = (new SelectBuilder('firstname'))
-            ->from('members')
-            ->where('email', ['users' => new Literal('email')])
+            ->from('members', 'm')
+            ->where(['m' => 'email'], ['users' => new Literal('email')])
         ;
 
         $this->newTestedInstance('users')

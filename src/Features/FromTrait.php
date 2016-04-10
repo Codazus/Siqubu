@@ -18,32 +18,21 @@ trait FromTrait
      * Set the from part. Can be an instance of \YABQ\Builder\Select or a
      * string. If the $data is an associative array, the alias must be the key.
      *
-     * @param Select $from FROM data
+     * @param string|Select $table Table
+     * @param string|null $alias Alias
      *
      * @return FromTrait
      *
      * @throws InvalidArgumentException if the alias is not a valid string
      * @throws InvalidArgumentException if the from is a Select without alias
      */
-    public function from($from)
+    public function from($table, $alias = null)
     {
-        $alias = null;
-
-        if (is_array($from)) {
-            $alias = key($from);
-
-            if (is_numeric($alias)) {
-                throw new InvalidArgumentException('Alias must be a valid string.');
-            }
-
-            $from = current($from);
-        }
-
-        if (empty($alias) && $from instanceof Select) {
+        if (null === $alias && $table instanceof Select) {
             throw new InvalidArgumentException('Every derived table must have its own alias.');
         }
 
-        $this->from = [$alias => $from];
+        $this->from = [$alias => $table];
 
         return $this;
     }
