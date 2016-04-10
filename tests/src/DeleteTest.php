@@ -11,7 +11,7 @@ class DeleteTest extends PHPUnit_Framework_TestCase
      */
     public function testSimpleDelete()
     {
-        $expected   = 'DELETE FROM `users`';
+        $expected   = 'DELETE FROM users';
         $builder    = (new Delete())
             ->from('users')
         ;
@@ -19,7 +19,7 @@ class DeleteTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($expected, $builder->render());
 
         // Add some WHERE clauses
-        $expected .= ' WHERE `email` LIKE \'%@domain.tld\' AND `disabled` != 1 AND `date_last_connexion` > DATE_SUB(NOW(), INTERVAL 3 DAYS)';
+        $expected .= ' WHERE email LIKE \'%@domain.tld\' AND disabled != 1 AND date_last_connexion > DATE_SUB(NOW(), INTERVAL 3 DAYS)';
 
         $builder
             ->whereLike('email', '%@domain.tld')
@@ -30,7 +30,7 @@ class DeleteTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($expected, $builder->render());
 
         // Add ORDER BY and LIMIT
-        $expected .= ' ORDER BY `lastname`, `firstname` LIMIT 10';
+        $expected .= ' ORDER BY lastname, firstname LIMIT 10';
 
         $builder
             ->orderBy('lastname', 'firstname')
@@ -45,16 +45,16 @@ class DeleteTest extends PHPUnit_Framework_TestCase
      */
     public function testIntermediaryDelete()
     {
-        $expected = 'DELETE FROM `users` '
-            . 'INNER JOIN `civilitytitles` `c` ON `id_civility` = `c`.`id` LEFT JOIN `orders` ON `users`.`id` = `orders`.`id_user` '
-            . 'WHERE `orders`.`id` != NULL ORDER BY MAX(`total_tax_inclusive`)';
+        $expected = 'DELETE FROM users '
+            . 'INNER JOIN civilitytitles c ON id_civility = c.id LEFT JOIN orders ON users.id = orders.id_user '
+            . 'WHERE orders.id != NULL ORDER BY MAX(total_tax_inclusive)';
 
         $builder = (new Delete())
             ->from('users')
             ->innerJoin(['c' => 'civilitytitles'], ['id_civility', ['c' => 'id']])
             ->leftJoin('orders', [['users' => 'id'], ['orders' => 'id_user']])
             ->whereNot(['orders' => 'id'], null)
-            ->orderBy(new Literal(sprintf('MAX(%s)', AbstractBuilder::quote('total_tax_inclusive'))))
+            ->orderBy(new Literal('MAX(total_tax_inclusive)'))
         ;
 
         $this->assertEquals($expected, $builder->render());

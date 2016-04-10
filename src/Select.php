@@ -99,19 +99,16 @@ class Select extends AbstractBuilder
             // ... if Select, render as is...
             } elseif ($field_value instanceof Select) {
                 $field_value = sprintf('(%s)', $field_value->render());
-            // ... else quote value.
-            } else {
-                $field_value = self::quote($field_value);
             }
 
             if (null !== $field_alias) {
-                $field = self::quote($field_alias).'.'.$field_value;
+                $field = sprintf('%s.%s', $field_alias, $field_value);
             } else {
                 $field = $field_value;
             }
 
             if (!is_numeric($alias)) {
-                $field = $field.' '.self::quote($alias);
+                $field = sprintf('%s %s', $field, $alias);
             }
 
             $fields[] = $field;

@@ -121,13 +121,6 @@ abstract class AbstractBuilder
     protected static $db;
 
     /**
-     * The quote identifier.
-     *
-     * @var string
-     */
-    protected static $quote_identifier = '`';
-
-    /**
      * Constructor.
      */
     public function __construct()
@@ -677,11 +670,9 @@ abstract class AbstractBuilder
 
         if ($table instanceof Select) {
             $table = sprintf('(%s)', $table->render());
-        } else {
-            $table = self::quote($table);
         }
 
-        return trim(sprintf('FROM %s %s', $table, self::quote($alias)));
+        return trim(sprintf('FROM %s %s', $table, $alias));
     }
 
     /**
@@ -702,11 +693,9 @@ abstract class AbstractBuilder
 
             if ($table instanceof Select) {
                 $table = sprintf('(%s)', $table->render());
-            } else {
-                $table = self::quote($table);
             }
 
-            $str .= trim(sprintf('%s %s %s', $join_data['type'], $table, self::quote($alias)));
+            $str .= trim(sprintf('%s %s %s', $join_data['type'], $table, $alias));
 
             if (0 === $join_data['conditions']->count()) {
                 continue;
@@ -732,21 +721,19 @@ abstract class AbstractBuilder
                 list($to_alias, $to_table)      = $this->getAliasData($data[1]);
 
                 if (null !== $from_alias) {
-                    $from = sprintf('%s.%s', self::quote($from_alias), self::quote($from_table));
+                    $from = sprintf('%s.%s', $from_alias, $from_table);
                 } else {
-                    $from = self::quote($from_table);
+                    $from = $from_table;
                 }
 
                 if ($to_table instanceof Literal) {
                     $to_table = $to_table->render();
                 } elseif ($to_table instanceof Select) {
                     $to_table = sprintf('(%s)', $to_table->render());
-                } else {
-                    $to_table = self::quote($to_table);
                 }
 
                 if (null !== $to_alias) {
-                    $to = sprintf('%s.%s', self::quote($to_alias), $to_table);
+                    $to = sprintf('%s.%s', $to_alias, $to_table);
                 } else {
                     $to = $to_table;
                 }
@@ -804,12 +791,10 @@ abstract class AbstractBuilder
                 $value = $value->render();
             } elseif ($value instanceof Select) {
                 $value = sprintf('(%s)', $value->render());
-            } else {
-                $value = self::quote($value);
             }
 
             if (null !== $alias) {
-                $value = sprintf('%s.%s', self::quote($alias), $value);
+                $value = sprintf('%s.%s', $alias, $value);
             }
 
             $group_by[] = $value;
@@ -854,12 +839,10 @@ abstract class AbstractBuilder
                 $value = $value->render();
             } elseif ($value instanceof Select) {
                 $value = sprintf('(%s)', $value->render());
-            } else {
-                $value = self::quote($value);
             }
 
             if (null !== $alias) {
-                $value = sprintf('%s.%s', self::quote($alias), $value);
+                $value = sprintf('%s.%s', $alias, $value);
             }
 
             $order_by[] = $value;
@@ -925,12 +908,10 @@ abstract class AbstractBuilder
                 $left_operand = $left_operand->render();
             } elseif ($left_operand instanceof Select) {
                 $left_operand = sprintf('(%s)', $left_operand->render());
-            } else {
-                $left_operand = self::quote($left_operand);
             }
 
             if (null !== $left_alias) {
-                $left = sprintf('%s.%s', self::quote($left_alias), $left_operand);
+                $left = sprintf('%s.%s', $left_alias, $left_operand);
             } else {
                 $left = $left_operand;
             }
@@ -945,7 +926,7 @@ abstract class AbstractBuilder
             }
 
             if (null !== $right_alias) {
-                $right = sprintf('%s.%s', self::quote($right_alias), $right_operand);
+                $right = sprintf('%s.%s', $right_alias, $right_operand);
             } else {
                 $right = $right_operand;
             }
@@ -986,26 +967,6 @@ abstract class AbstractBuilder
             null,
             $value,
         ];
-    }
-
-    /**
-     * Quote the value.
-     *
-     * @param string $value Value to quote
-     *
-     * @return string
-     */
-    public static function quote($value)
-    {
-        if (empty($value)) {
-            return null;
-        }
-
-        if (static::WILDCARD === $value) {
-            return $value;
-        }
-
-        return static::$quote_identifier.$value.static::$quote_identifier;
     }
 
     /**

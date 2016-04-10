@@ -30,7 +30,7 @@ class Update extends AbstractBuilder
     {
         parent::__construct();
 
-        $this->table = self::quote($table);
+        $this->table = (string) $table;
     }
 
     /**
@@ -103,9 +103,9 @@ class Update extends AbstractBuilder
             }
 
             if (null !== $field_alias) {
-                $field = self::quote($field_alias).'.'.self::quote($field_value);
+                $field = sprintf('%s.%s', $field_alias, $field_value);
             } else {
-                $field = self::quote($field_value);
+                $field = $field_value;
             }
 
             $fields[] = sprintf('%s = %s', $field, $value);
