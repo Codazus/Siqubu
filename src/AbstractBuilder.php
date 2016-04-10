@@ -58,13 +58,6 @@ abstract class AbstractBuilder
     const NATURAL_JOIN = 'NATURAL JOIN';
 
     /**
-     * Columns to use.
-     *
-     * @var array
-     */
-    protected $columns = [];
-
-    /**
      * FROM part.
      *
      * @var array
@@ -188,7 +181,7 @@ abstract class AbstractBuilder
      */
     public function innerJoin($data, array $conditions = [])
     {
-        return $this->join(self::INNER_JOIN, $data, $conditions);
+        return $this->join(self::INNER_JOIN, $data, $conditions, func_get_args());
     }
 
     /**
@@ -201,7 +194,7 @@ abstract class AbstractBuilder
      */
     public function leftJoin($data, array $conditions = [])
     {
-        return $this->join(self::LEFT_JOIN, $data, $conditions);
+        return $this->join(self::LEFT_JOIN, $data, $conditions, func_get_args());
     }
 
     /**
@@ -214,7 +207,7 @@ abstract class AbstractBuilder
      */
     public function rightJoin($data, array $conditions = [])
     {
-        return $this->join(self::RIGHT_JOIN, $data, $conditions);
+        return $this->join(self::RIGHT_JOIN, $data, $conditions, func_get_args());
     }
 
     /**
@@ -227,7 +220,7 @@ abstract class AbstractBuilder
      */
     public function crossJoin($data, array $conditions = [])
     {
-        return $this->join(self::CROSS_JOIN, $data, $conditions);
+        return $this->join(self::CROSS_JOIN, $data, $conditions, func_get_args());
     }
 
     /**
@@ -240,7 +233,7 @@ abstract class AbstractBuilder
      */
     public function fullJoin($data, array $conditions = [])
     {
-        return $this->join(self::FULL_JOIN, $data, $conditions);
+        return $this->join(self::FULL_JOIN, $data, $conditions, func_get_args());
     }
 
     /**
@@ -253,7 +246,7 @@ abstract class AbstractBuilder
      */
     public function naturalJoin($data, array $conditions = [])
     {
-        return $this->join(self::NATURAL_JOIN, $data, $conditions);
+        return $this->join(self::NATURAL_JOIN, $data, $conditions, func_get_args());
     }
 
     /**
@@ -381,6 +374,11 @@ abstract class AbstractBuilder
     {
         if (!is_array($data)) {
             $data = [$data];
+        }
+
+        // If $args contains more than 1 data, we add them to existing columns.
+        if (1 < func_num_args()) {
+            $data = array_merge($data, array_slice(func_get_args(), 1));
         }
 
         foreach ($data as $key => $value) {
@@ -521,6 +519,11 @@ abstract class AbstractBuilder
             $data = [$data];
         }
 
+        // If $args contains more than 1 data, we add them to existing columns.
+        if (1 < func_num_args()) {
+            $data = array_merge($data, array_slice(func_get_args(), 1));
+        }
+
         foreach ($data as $key => $value) {
             if (!is_numeric($key)) {
                 $value = [$key => $value];
@@ -617,16 +620,27 @@ abstract class AbstractBuilder
      * @param string $type Type of JOIN
      * @param mixed $data Data of the JOIN
      * @param array $conditions Conditions of the JOIN
+     * @param array $args Extra arguments passed
      *
      * @return AbstractBuilder
      */
-    protected function join($type, $data, array $conditions = [])
+    protected function join($type, $data, array $conditions = [], array $args = [])
     {
         if (!in_array($type, [
             self::CROSS_JOIN, self::FULL_JOIN, self::INNER_JOIN,
             self::LEFT_JOIN, self::NATURAL_JOIN, self::RIGHT_JOIN
         ])) {
             throw new InvalidArgumentException('Invalid type of JOIN.');
+        }
+
+        /*
+         * If $args contains more than 2 data (join type and first condition),
+         * we add them to existing conditions.
+         */
+        $conditions = [$conditions];
+
+        if (2 < count($args)) {
+            $conditions = array_merge($conditions, array_slice($args, 2));
         }
 
         // Checks data conditions

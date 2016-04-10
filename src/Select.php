@@ -10,6 +10,13 @@ use Siqubu\Expressions\Literal;
 class Select extends AbstractBuilder
 {
     /**
+     * Columns to use.
+     *
+     * @var array
+     */
+    protected $columns = [];
+
+    /**
      * Select builder constructor.
      *
      * @param mixed $columns Columns to select
@@ -19,7 +26,7 @@ class Select extends AbstractBuilder
         parent::__construct();
 
         if (null !== $columns) {
-            $this->select($columns);
+            $this->select(func_get_args());
         }
     }
 
@@ -39,6 +46,11 @@ class Select extends AbstractBuilder
     {
         if (!is_array($columns)) {
             $columns = [$columns];
+        }
+
+        // If $args contains more than 1 data, we add them to existing columns.
+        if (1 < func_num_args()) {
+            $columns = array_merge($columns, array_slice(func_get_args(), 1));
         }
 
         $this->columns = array_merge($this->columns, $columns);
