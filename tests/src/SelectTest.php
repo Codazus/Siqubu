@@ -18,7 +18,7 @@ class SelectTest extends PHPUnit_Framework_TestCase
             ->select('firstname')
             ->select('lastname')
             // Another possible writing
-            //->select(['id', 'firstname', 'lastname'])
+            //->select('id', 'firstname', 'lastname')
             ->from('users')
         ;
 
@@ -42,7 +42,7 @@ class SelectTest extends PHPUnit_Framework_TestCase
             ->orderBy('lastname')
             ->orderBy('firstname')
             // Another possible writing
-            //->orderBy(['lastname', 'firstname'])
+            //->orderBy('lastname', 'firstname')
             ->limit(10)
         ;
 
@@ -59,10 +59,10 @@ class SelectTest extends PHPUnit_Framework_TestCase
             . 'WHERE `orders`.`id` != NULL GROUP BY `users`.`id` HAVING SUM(total_tax_inclusive) >= \'5000\' ORDER BY MAX(`total_tax_inclusive`)';
 
         // Columns can be passed in the constructor
-        $builder = (new Select([['users' => 'id'], 'firstname', 'lastname', ['c' => 'id'], 'title']))
+        $builder = (new Select(['users' => 'id'], 'firstname', 'lastname', ['c' => 'id'], 'title'))
             ->from('users')
-            ->innerJoin(['c' => 'civilitytitles'], [['id_civility', ['c' => 'id']]])
-            ->leftJoin('orders', [[['users' => 'id'], ['orders' => 'id_user']]])
+            ->innerJoin(['c' => 'civilitytitles'], ['id_civility', ['c' => 'id']])
+            ->leftJoin('orders', [['users' => 'id'], ['orders' => 'id_user']])
             ->whereNot(['orders' => 'id'], null)
             ->groupBy(['users' => 'id'])
             ->havingGte(new Literal('SUM(total_tax_inclusive)'), 5000)

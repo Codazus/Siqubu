@@ -35,10 +35,7 @@ class UpdateTest extends PHPUnit_Framework_TestCase
         $expected .= ' ORDER BY `lastname`, `firstname` LIMIT 10';
 
         $builder
-            ->orderBy('lastname')
-            ->orderBy('firstname')
-            // Another possible writing
-            //->orderBy(['lastname', 'firstname'])
+            ->orderBy(['lastname', 'firstname'])
             ->limit(10)
         ;
 
@@ -60,8 +57,8 @@ class UpdateTest extends PHPUnit_Framework_TestCase
             ->where('email', ['users' => new Literal(AbstractBuilder::quote('email'))])
         ;
         $builder        = (new Update('users'))
-            ->innerJoin(['c' => 'civilitytitles'], [['id_civility', ['c' => 'id']]])
-            ->leftJoin('orders', [[['users' => 'id'], ['orders' => 'id_user']]])
+            ->innerJoin(['c' => 'civilitytitles'], ['id_civility', ['c' => 'id']])
+            ->leftJoin('orders', [['users' => 'id'], ['orders' => 'id_user']])
             ->set('firstname', $select_name)
             ->whereNot(['orders' => 'id'], null)
             ->orderBy(new Literal(sprintf('MAX(%s)', AbstractBuilder::quote('total_tax_inclusive'))))
