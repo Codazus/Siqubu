@@ -7,7 +7,7 @@ php:
   - 5.4
   - hhvm
 
-before_script: composer install
+before_script: composer install -q
 
 script:
   - phpunit
