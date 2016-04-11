@@ -4,7 +4,6 @@ namespace Siqubu\Features;
 
 use Siqubu\Expressions\CloseBracket;
 use Siqubu\Expressions\ExpressionsInterface;
-use Siqubu\Expressions\Literal;
 use Siqubu\Expressions\OpenBracket;
 use Siqubu\Expressions\OrOperator;
 use Siqubu\Select;
@@ -40,18 +39,14 @@ trait WhereOrHavingTrait
             }
 
             // Treats the left operand
-            if ($data['left'] instanceof Literal) {
-                $left = $data['left']->render();
-            } elseif ($data['left'] instanceof Select) {
+            if ($data['left'] instanceof Select) {
                 $left = sprintf('(%s)', $data['left']->render());
             } else {
                 $left = $data['left'];
             }
 
             // Treats the right operand
-            if ($data['right'] instanceof Literal) {
-                $right = $data['right']->render();
-            } elseif ($data['right'] instanceof Select) {
+            if ($data['right'] instanceof Select) {
                 $right = sprintf('(%s)', $data['right']->render());
             } else {
                 $right = null === $data['right'] ? 'NULL' : $data['right'];

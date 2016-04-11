@@ -2,7 +2,6 @@
 
 namespace Siqubu\Features;
 
-use Siqubu\Expressions\Literal;
 use Siqubu\Select;
 
 trait SetTrait
@@ -43,11 +42,7 @@ trait SetTrait
         }
 
         foreach ($this->set_values as $field => $value) {
-            // If Literal, render as is...
-            if ($value instanceof Literal) {
-                $value = $value->render();
-            // ... if Select, render as is...
-            } elseif ($value instanceof Select) {
+            if ($value instanceof Select) {
                 $value = sprintf('(%s)', $value->render());
             } else {
                 $value = null === $value ? 'NULL' : $value;

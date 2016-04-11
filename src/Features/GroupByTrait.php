@@ -2,7 +2,6 @@
 
 namespace Siqubu\Features;
 
-use Siqubu\Expressions\Literal;
 use Siqubu\Select;
 
 trait GroupByTrait
@@ -42,13 +41,11 @@ trait GroupByTrait
         $group_by = [];
 
         foreach ($this->group_by as $value) {
-            if ($value instanceof Literal) {
-                $value = $value->render();
-            } elseif ($value instanceof Select) {
+            if ($value instanceof Select) {
                 $value = sprintf('(%s)', $value->render());
             }
 
-            $group_by[] = $value;
+            $group_by[] = (string) $value;
         }
 
         return trim(sprintf('GROUP BY %s', implode(', ', $group_by)));

@@ -4,7 +4,6 @@ namespace Siqubu\tests\units;
 
 use atoum;
 use Siqubu\Select as SelectBuilder;
-use Siqubu\Expressions\Literal;
 
 class Select extends atoum\test
 {
@@ -36,7 +35,7 @@ class Select extends atoum\test
         $builder
             ->whereLike('email', ':email')
             ->whereNot('disabled', true)
-            ->whereGt('date_last_connexion', new Literal('DATE_SUB(NOW(), INTERVAL 3 DAYS)'))
+            ->whereGt('date_last_connexion','DATE_SUB(NOW(), INTERVAL 3 DAYS)')
             ->setParameters($parameters)
         ;
 
@@ -76,8 +75,8 @@ class Select extends atoum\test
             ->leftJoin('orders', ['users.id', 'orders.id_user'])
             ->whereNot('orders.id', null)
             ->groupBy('users.id')
-            ->havingGte(new Literal('SUM(total_tax_inclusive)'), 5000)
-            ->orderBy(new Literal('MAX(total_tax_inclusive)'))
+            ->havingGte('SUM(total_tax_inclusive)', 5000)
+            ->orderBy('MAX(total_tax_inclusive)')
         ;
 
         $this

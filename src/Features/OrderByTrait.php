@@ -2,7 +2,6 @@
 
 namespace Siqubu\Features;
 
-use Siqubu\Expressions\Literal;
 use Siqubu\Select;
 
 trait OrderByTrait
@@ -42,13 +41,11 @@ trait OrderByTrait
         $order_by = [];
 
         foreach ($this->order_by as $value) {
-            if ($value instanceof Literal) {
-                $value = $value->render();
-            } elseif ($value instanceof Select) {
+            if ($value instanceof Select) {
                 $value = sprintf('(%s)', $value->render());
             }
 
-            $order_by[] = $value;
+            $order_by[] = (string) $value;
         }
 
         return trim(sprintf('ORDER BY %s', implode(', ', $order_by)));

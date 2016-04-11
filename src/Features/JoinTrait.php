@@ -5,7 +5,6 @@ namespace Siqubu\Features;
 use InvalidArgumentException;
 use Siqubu\Expressions\CloseBracket;
 use Siqubu\Expressions\ExpressionsInterface;
-use Siqubu\Expressions\Literal;
 use Siqubu\Expressions\OpenBracket;
 use Siqubu\Expressions\OrOperator;
 use Siqubu\Select;
@@ -194,15 +193,11 @@ trait JoinTrait
 
                 list($from, $to) = $data;
 
-                if ($from instanceof Literal) {
-                    $from = $from->render();
-                } elseif ($from instanceof Select) {
+                if ($from instanceof Select) {
                     $from = sprintf('(%s)', $from->render());
                 }
 
-                if ($to instanceof Literal) {
-                    $to = $to->render();
-                } elseif ($to instanceof Select) {
+                if ($to instanceof Select) {
                     $to = sprintf('(%s)', $to->render());
                 }
 
