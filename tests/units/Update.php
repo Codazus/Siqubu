@@ -60,8 +60,8 @@ class Update extends atoum\test
     public function testIntermediaryUpdate()
     {
         $expected = 'UPDATE users '
-            . 'INNER JOIN civilitytitles c ON id_civility = c.id LEFT JOIN orders ON users.id = orders.id_user '
-            . 'SET firstname = (SELECT firstname FROM members m WHERE m.email = users.email) '
+            . 'INNER JOIN civilitytitles AS c ON id_civility = c.id LEFT JOIN orders ON users.id = orders.id_user '
+            . 'SET firstname = (SELECT firstname FROM members AS m WHERE m.email = users.email) '
             . 'WHERE orders.id != NULL ORDER BY MAX(total_tax_inclusive)';
 
         $select_name = (new SelectBuilder('firstname'))

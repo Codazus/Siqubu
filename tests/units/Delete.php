@@ -61,7 +61,7 @@ class Delete extends atoum\test
     public function testIntermediaryDelete()
     {
         $expected = 'DELETE FROM users '
-            . 'INNER JOIN civilitytitles c ON id_civility = c.id LEFT JOIN orders ON users.id = orders.id_user '
+            . 'INNER JOIN civilitytitles AS c ON id_civility = c.id LEFT JOIN orders ON users.id = orders.id_user '
             . 'WHERE orders.id != NULL ORDER BY MAX(total_tax_inclusive)';
 
         $this->newTestedInstance

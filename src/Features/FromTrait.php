@@ -50,6 +50,10 @@ trait FromTrait
             $table = sprintf('(%s)', $table->render());
         }
 
-        return trim(sprintf('FROM %s %s', $table, $alias));
+        if (null !== $alias) {
+            $table = trim(sprintf('%s AS %s', $table, $alias));
+        }
+
+        return trim(sprintf('FROM %s', $table));
     }
 }

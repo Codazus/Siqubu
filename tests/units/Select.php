@@ -67,7 +67,7 @@ class Select extends atoum\test
     public function testIntermediarySelect()
     {
         $expected   = 'SELECT users.id, firstname, lastname, c.id, title FROM users '
-            . 'INNER JOIN civilitytitles c ON id_civility = c.id LEFT JOIN orders ON users.id = orders.id_user '
+            . 'INNER JOIN civilitytitles AS c ON id_civility = c.id LEFT JOIN orders ON users.id = orders.id_user '
             . 'WHERE orders.id != NULL GROUP BY users.id HAVING SUM(total_tax_inclusive) >= 5000 ORDER BY MAX(total_tax_inclusive)';
         $builder    = (new SelectBuilder('users.id', 'firstname', 'lastname', 'c.id', 'title'))
             ->from('users')

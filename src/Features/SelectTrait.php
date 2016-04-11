@@ -48,7 +48,7 @@ trait SelectTrait
             }
 
             if (null !== $alias) {
-                $field = trim(sprintf('%s %s', $field, $alias));
+                $field = trim(sprintf('%s AS %s', $field, $alias));
             }
 
             $fields[] = (string) $field;

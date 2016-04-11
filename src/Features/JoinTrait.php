@@ -169,7 +169,11 @@ trait JoinTrait
                 $table = sprintf('(%s)', $table->render());
             }
 
-            $str .= trim(sprintf('%s %s %s', $join_data['type'], $table, $alias));
+            if (null !== $alias) {
+                $table = trim(sprintf('%s AS %s', $table, $alias));
+            }
+
+            $str .= trim(sprintf('%s %s', $join_data['type'], $table));
 
             if (0 === $join_data['conditions']->count()) {
                 continue;
