@@ -16,17 +16,13 @@ trait SelectTrait
     /**
      * Set the selected columns.
      *
-     * @param string|array $columns Columns to select.<br />
-     * - If a string is passed, the value will be quoted,
-     * - if a \Siqubu\Select is passed, he will be rendered,
-     * - if an array is passed the key will be the table name and his value
-     * the field.
+     * @param string $column Columns to select.
      *
      * @return Select
      */
-    public function select($columns)
+    public function select($column)
     {
-        $this->columns = array_merge($this->columns, is_array($columns) ? $columns : func_get_args());
+        $this->columns = array_merge($this->columns, func_get_args());
 
         return $this;
     }

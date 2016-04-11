@@ -34,7 +34,9 @@ class Select extends AbstractBuilder implements SelectInterface, JoinInterface
         $this->having   = new SplQueue();
 
         if (null !== $columns) {
-            $this->select(func_get_args());
+            foreach (func_get_args() as $arg) {
+                $this->select($arg);
+            }
         }
     }
 
