@@ -16,7 +16,7 @@ trait SelectTrait
     /**
      * Set the selected columns.
      *
-     * @param string $column Columns to select.
+     * @param mixed $columns Columns to select.
      *
      * @return Select
      */

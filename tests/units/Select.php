@@ -72,7 +72,7 @@ class Select extends atoum\test
         $builder    = (new SelectBuilder('users.id', 'firstname', 'lastname', 'c.id', 'title'))
             ->from('users')
             ->innerJoin(['civilitytitles', 'c'], ['id_civility', 'c.id'])
-            ->leftJoin('orders', ['users.id', 'orders.id_user'])
+            ->leftJoin('orders', 'users.id = orders.id_user')
             ->whereNot('orders.id', null)
             ->groupBy('users.id')
             ->havingGte('SUM(total_tax_inclusive)', 5000)

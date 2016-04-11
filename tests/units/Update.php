@@ -1,4 +1,5 @@
 <?php
+
 namespace Siqubu\tests\units;
 
 use atoum;

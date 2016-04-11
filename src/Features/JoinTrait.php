@@ -23,11 +23,11 @@ trait JoinTrait
      * Add a INNER JOIN.
      *
      * @param mixed $table Table of the JOIN
-     * @param array $conditions Conditions of the JOIN
+     * @param mixed $conditions Conditions of the JOIN
      *
      * @return JoinTrait
      */
-    public function innerJoin($table, array $conditions = [])
+    public function innerJoin($table, $conditions = null)
     {
         return $this->join(self::INNER_JOIN, $table, $conditions, func_get_args());
     }
@@ -36,11 +36,11 @@ trait JoinTrait
      * Add a LEFT JOIN.
      *
      * @param mixed $table Table of the join
-     * @param array $conditions Conditions of the JOIN
+     * @param mixed $conditions Conditions of the JOIN
      *
      * @return JoinTrait
      */
-    public function leftJoin($table, array $conditions = [])
+    public function leftJoin($table, $conditions = null)
     {
         return $this->join(self::LEFT_JOIN, $table, $conditions, func_get_args());
     }
@@ -49,11 +49,11 @@ trait JoinTrait
      * Add a RIGHT JOIN.
      *
      * @param mixed $table Table of the join
-     * @param array $conditions Conditions of the JOIN
+     * @param mixed $conditions Conditions of the JOIN
      *
      * @return JoinTrait
      */
-    public function rightJoin($table, array $conditions = [])
+    public function rightJoin($table, $conditions = null)
     {
         return $this->join(self::RIGHT_JOIN, $table, $conditions, func_get_args());
     }
@@ -62,11 +62,11 @@ trait JoinTrait
      * Add a CROSS JOIN.
      *
      * @param mixed $table Table of the join
-     * @param array $conditions Conditions of the JOIN
+     * @param mixed $conditions Conditions of the JOIN
      *
      * @return JoinTrait
      */
-    public function crossJoin($table, array $conditions = [])
+    public function crossJoin($table, $conditions = null)
     {
         return $this->join(self::CROSS_JOIN, $table, $conditions, func_get_args());
     }
@@ -75,11 +75,11 @@ trait JoinTrait
      * Add a FULL JOIN.
      *
      * @param mixed $table Table of the join
-     * @param array $conditions Conditions of the JOIN
+     * @param mixed $conditions Conditions of the JOIN
      *
      * @return JoinTrait
      */
-    public function fullJoin($table, array $conditions = [])
+    public function fullJoin($table, $conditions = null)
     {
         return $this->join(self::FULL_JOIN, $table, $conditions, func_get_args());
     }
@@ -88,11 +88,11 @@ trait JoinTrait
      * Add a NATURAL JOIN.
      *
      * @param mixed $table Table of the join
-     * @param array $conditions Conditions of the JOIN
+     * @param mixed $conditions Conditions of the JOIN
      *
      * @return JoinTrait
      */
-    public function naturalJoin($table, array $conditions = [])
+    public function naturalJoin($table, $conditions = null)
     {
         return $this->join(self::NATURAL_JOIN, $table, $conditions, func_get_args());
     }
@@ -102,12 +102,12 @@ trait JoinTrait
      *
      * @param string $type Type of JOIN
      * @param mixed $table Table of the join
-     * @param array $conditions Conditions of the JOIN
+     * @param mixed $conditions Conditions of the JOIN
      * @param array $args Extra arguments passed
      *
      * @return JoinTrait
      */
-    protected function join($type, $table, array $conditions = [], array $args = [])
+    protected function join($type, $table, $conditions = null, array $args = [])
     {
         if (!in_array($type, [
             self::CROSS_JOIN, self::FULL_JOIN, self::INNER_JOIN,
@@ -116,26 +116,23 @@ trait JoinTrait
             throw new InvalidArgumentException('Invalid type of JOIN.');
         }
 
-        /*
-         * If $args contains more than 2 data (join type and first condition),
-         * we add them to existing conditions.
-         */
-        $conditions = [$conditions];
-
-        if (2 < count($args)) {
-            $conditions = array_merge($conditions, array_slice($args, 2));
-        }
-
-        // Checks data conditions
         $queue_conditions = new SplQueue();
 
-        foreach ($conditions as $conditon_data) {
-            if (!$conditon_data instanceof ExpressionsInterface &&
-                (!is_array($conditon_data) || 2 !== count($conditon_data))) {
-                throw new InvalidArgumentException('Each JOIN conditions should be an ExpressionsInterface or an array of two elements.');
+        if (null !== $conditions) {
+            /*
+             * If $args contains more than 2 data (join type and first condition),
+             * we add them to existing conditions.
+             */
+            $conditions = [$conditions];
+
+            if (2 < count($args)) {
+                $conditions = array_merge($conditions, array_slice($args, 2));
             }
 
-            $queue_conditions->push($conditon_data);
+            // Checks data conditions
+            foreach ($conditions as $conditon_data) {
+                $queue_conditions->push($conditon_data);
+            }
         }
 
         $this->join->push([
@@ -195,17 +192,21 @@ trait JoinTrait
                     continue;
                 }
 
-                list($from, $to) = $data;
+                if (!is_array($data)) {
+                    $str .= $data;
+                } else {
+                    list($from, $to) = $data;
 
-                if ($from instanceof Select) {
-                    $from = sprintf('(%s)', $from->render());
+                    if ($from instanceof Select) {
+                        $from = sprintf('(%s)', $from->render());
+                    }
+
+                    if ($to instanceof Select) {
+                        $to = sprintf('(%s)', $to->render());
+                    }
+
+                    $str .= sprintf('%s = %s ', $from, $to);
                 }
-
-                if ($to instanceof Select) {
-                    $to = sprintf('(%s)', $to->render());
-                }
-
-                $str .= sprintf('%s = %s ', $from, $to);
 
                 /*
                  * If we have another condition part next and it is not a
