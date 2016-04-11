@@ -192,9 +192,7 @@ trait JoinTrait
                     continue;
                 }
 
-                if (!is_array($data)) {
-                    $str .= $data;
-                } else {
+                if (is_array($data)) {
                     list($from, $to) = $data;
 
                     if ($from instanceof Select) {
@@ -206,6 +204,8 @@ trait JoinTrait
                     }
 
                     $str .= sprintf('%s = %s ', $from, $to);
+                } else {
+                    $str .= $data.' ';
                 }
 
                 /*
